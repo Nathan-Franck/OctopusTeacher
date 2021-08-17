@@ -52,11 +52,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	main.infoDisplay.resolution = true;
 	main.infoDisplay.fpsinfo = true;
 
+	using namespace wiScene;
 	class Myrender : public RenderPath3D
 	{
 		wiSprite sprite;
 		wiSpriteFont font;
 		wiECS::Entity entity;
+		std::vector<LightComponent*> strobeLights;
+		float time;
 	public:
 		Myrender()
 		{
@@ -72,8 +75,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			font.params.size = 42;
 			AddFont(&font);
 
-			entity = wiScene::LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
-			using namespace wiScene;
+			entity = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
 			size_t count = GetScene().hierarchy.GetCount();
 			for (int i = 0; i < count; i++)
 			{
@@ -83,18 +85,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					auto light = GetScene().lights.GetComponent(enti);
 					if (light != nullptr)
 					{
-						light->color = { 1, 0, 0 };
+						strobeLights.push_back(light);
 					}
 				}
 			}
 		}
 		void Update(float dt) override
 		{
-			using namespace wiScene;
+			time += dt;
 			TransformComponent* transform = GetScene().transforms.GetComponent(entity);
 			if (transform != nullptr)
 			{
 				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
+			}
+			for (int i = 0; i < strobeLights.size(); i++)
+			{
+				strobeLights[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
 			}
 
 			RenderPath3D::Update(dt);
