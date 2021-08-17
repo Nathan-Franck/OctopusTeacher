@@ -52,6 +52,58 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	main.infoDisplay.resolution = true;
 	main.infoDisplay.fpsinfo = true;
 
+	class Myrender : public RenderPath3D
+	{
+		wiSprite sprite;
+		wiSpriteFont font;
+		wiECS::Entity entity;
+	public:
+		Myrender()
+		{
+			sprite = wiSprite("../Content/logo_small.png");
+			sprite.params.pos = XMFLOAT3(100, 100, 0);
+			sprite.params.siz = XMFLOAT2(256, 256);
+			sprite.anim.wobbleAnim.amount = XMFLOAT2(1, 1);
+			AddSprite(&sprite);
+
+			font.SetText("Hello World!");
+			font.params.posX = 100;
+			font.params.posY = sprite.params.pos.y + sprite.params.siz.y;
+			font.params.size = 42;
+			AddFont(&font);
+
+			entity = wiScene::LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
+			using namespace wiScene;
+			size_t count = GetScene().hierarchy.GetCount();
+			for (int i = 0; i < count; i++)
+			{
+				auto heir = GetScene().hierarchy[i];
+				auto enti = GetScene().hierarchy.GetEntity(i);
+				if (heir.parentID == entity) {
+					auto light = GetScene().lights.GetComponent(enti);
+					if (light != nullptr)
+					{
+						light->color = { 1, 0, 0 };
+					}
+				}
+			}
+		}
+		void Update(float dt) override
+		{
+			using namespace wiScene;
+			TransformComponent* transform = GetScene().transforms.GetComponent(entity);
+			if (transform != nullptr)
+			{
+				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
+			}
+
+			RenderPath3D::Update(dt);
+		}
+	};
+
+	Myrender render;
+	main.ActivatePath(&render);
+
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
 	{

@@ -1245,37 +1245,38 @@ namespace wiScene
 		void Serialize(wiArchive& archive, wiECS::EntitySerializer& seri);
 	};
 
+	using namespace wiECS;
 	struct Scene
 	{
-		wiECS::ComponentManager<NameComponent> names;
-		wiECS::ComponentManager<LayerComponent> layers;
-		wiECS::ComponentManager<TransformComponent> transforms;
-		wiECS::ComponentManager<PreviousFrameTransformComponent> prev_transforms;
-		wiECS::ComponentManager<HierarchyComponent> hierarchy;
-		wiECS::ComponentManager<MaterialComponent> materials;
-		wiECS::ComponentManager<MeshComponent> meshes;
-		wiECS::ComponentManager<ImpostorComponent> impostors;
-		wiECS::ComponentManager<ObjectComponent> objects;
-		wiECS::ComponentManager<AABB> aabb_objects;
-		wiECS::ComponentManager<RigidBodyPhysicsComponent> rigidbodies;
-		wiECS::ComponentManager<SoftBodyPhysicsComponent> softbodies;
-		wiECS::ComponentManager<ArmatureComponent> armatures;
-		wiECS::ComponentManager<LightComponent> lights;
-		wiECS::ComponentManager<AABB> aabb_lights;
-		wiECS::ComponentManager<CameraComponent> cameras;
-		wiECS::ComponentManager<EnvironmentProbeComponent> probes;
-		wiECS::ComponentManager<AABB> aabb_probes;
-		wiECS::ComponentManager<ForceFieldComponent> forces;
-		wiECS::ComponentManager<DecalComponent> decals;
-		wiECS::ComponentManager<AABB> aabb_decals;
-		wiECS::ComponentManager<AnimationComponent> animations;
-		wiECS::ComponentManager<AnimationDataComponent> animation_datas;
-		wiECS::ComponentManager<wiEmittedParticle> emitters;
-		wiECS::ComponentManager<wiHairParticle> hairs;
-		wiECS::ComponentManager<WeatherComponent> weathers;
-		wiECS::ComponentManager<SoundComponent> sounds;
-		wiECS::ComponentManager<InverseKinematicsComponent> inverse_kinematics;
-		wiECS::ComponentManager<SpringComponent> springs;
+		ComponentManager<NameComponent> names;
+		ComponentManager<LayerComponent> layers;
+		ComponentManager<TransformComponent> transforms;
+		ComponentManager<PreviousFrameTransformComponent> prev_transforms;
+		ComponentManager<HierarchyComponent> hierarchy;
+		ComponentManager<MaterialComponent> materials;
+		ComponentManager<MeshComponent> meshes;
+		ComponentManager<ImpostorComponent> impostors;
+		ComponentManager<ObjectComponent> objects;
+		ComponentManager<AABB> aabb_objects;
+		ComponentManager<RigidBodyPhysicsComponent> rigidbodies;
+		ComponentManager<SoftBodyPhysicsComponent> softbodies;
+		ComponentManager<ArmatureComponent> armatures;
+		ComponentManager<LightComponent> lights;
+		ComponentManager<AABB> aabb_lights;
+		ComponentManager<CameraComponent> cameras;
+		ComponentManager<EnvironmentProbeComponent> probes;
+		ComponentManager<AABB> aabb_probes;
+		ComponentManager<ForceFieldComponent> forces;
+		ComponentManager<DecalComponent> decals;
+		ComponentManager<AABB> aabb_decals;
+		ComponentManager<AnimationComponent> animations;
+		ComponentManager<AnimationDataComponent> animation_datas;
+		ComponentManager<wiEmittedParticle> emitters;
+		ComponentManager<wiHairParticle> hairs;
+		ComponentManager<WeatherComponent> weathers;
+		ComponentManager<SoundComponent> sounds;
+		ComponentManager<InverseKinematicsComponent> inverse_kinematics;
+		ComponentManager<SpringComponent> springs;
 
 		// Non-serialized attributes:
 		float dt = 0;
