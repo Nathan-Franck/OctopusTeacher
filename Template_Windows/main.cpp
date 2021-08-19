@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "main.h"
+#include "utils.h"
 #include <sstream>
 #include <string>
 #include <ranges>
@@ -23,37 +24,6 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 using namespace wiECS;
 using namespace wiScene;
-
-template<class T>
-std::vector<Entity> getEntitiesForParent(
-	Entity parent
-) {
-	std::vector<Entity> entities;
-	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
-		auto heirarchyComponent = GetScene().hierarchy[i];
-		auto entity = GetScene().hierarchy.GetEntity(i);
-		if (heirarchyComponent.parentID == parent) {
-			auto manager = GetScene().GetManager<T>();
-			auto component = manager->GetComponent(entity);
-			if (component != nullptr) {
-				entities.push_back(entity);
-			}
-		}
-	}
-	return entities;
-}
-
-template <class T>
-std::function<T*(Entity)> componentFromEntity() {
-	auto result = [](Entity ent) { return GetScene().GetManager<T>()->GetComponent(ent); };
-	return result;
-}
-
-template <std::ranges::range R>
-auto to_vector(R&& r) {
-	auto r_common = r | std::views::common;
-	return std::vector(r_common.begin(), r_common.end());
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -130,37 +100,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			// 
 			// 💡 Conclusion ---- GetScene().GetManager<NameComponent>(); works same as GetScene().names!
 
-			auto isOctopus = [](Entity entity) {
-				auto component = GetScene().names.GetComponent(entity);
-				return component->name.compare("OctopusRiggedTopo.glb") == 0;
-			};
-			auto isArmature = [](Entity entity) {
-				return GetScene().names.GetComponent(entity)->name.compare("Armature") == 0;
-			};
-			auto isArm = [](Entity entity) {
-				auto name = GetScene().names.GetComponent(entity)->name;
-				auto prefix = name.substr(0, 3);
-				return prefix.compare("Arm") == 0 && name.length() == 4;
-			};
-			auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-			auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
-			auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity.front());
-			auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
-			auto namesUnderArmature = getEntitiesForParent<NameComponent>(armatureEntity.front());
-			auto armsEntities = namesUnderArmature | std::views::filter(isArm);
-			limbs = to_vector(armsEntities
-				| std::views::transform([](Entity armEnt) {
-					std::vector<Entity> bones{ armEnt };
-					Entity parent = armEnt;
-					while (true) {
-						std::vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
-						if (childEntities.size() == 0) break;
-						Entity childEntity = childEntities.front();
-						bones.push_back(childEntity);
-						parent = childEntity;
-					}
-					return bones;
-				}));
+			limbs = getArms(octopusScene);
 			strobeLights = getEntitiesForParent<LightComponent>(teapot);
 		}
 		void Update(float dt) override {
@@ -169,12 +109,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			if (transform != nullptr) {
 				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
 			}
-			std::ranges::for_each(limbs, [](auto skeletonLimb) {
-				std::stringstream ss;
-				ss << std::endl << GetScene().names.GetComponent(skeletonLimb[3])->name << std::endl;
-				wiBackLog::post(ss.str().c_str());
-			});
 
+			// 💃 Dance octopus, dance!
+			int limbIndex = 0;
+			std::ranges::for_each(limbs, [&](std::vector<Entity> limb) {
+				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>());
+				int boneIndex = 0;
+				std::ranges::for_each(bones, [&](TransformComponent* bone) {
+					bone->SetDirty();
+					XMVECTOR quat = XMLoadFloat4(&bone->rotation_local);
+					XMVECTOR x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 3 * 3.14f / 180.0f, 0, 0);
+					quat = XMQuaternionMultiply(x, quat);
+					quat = XMQuaternionNormalize(quat);
+					XMStoreFloat4(&bone->rotation_local, quat);
+					boneIndex++;
+				});
+				limbIndex++;
+			});
 
 			auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>());

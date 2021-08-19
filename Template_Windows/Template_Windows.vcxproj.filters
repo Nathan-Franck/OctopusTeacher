@@ -25,6 +25,9 @@
     <ClInclude Include="main.h">
       <Filter>Code</Filter>
     </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
