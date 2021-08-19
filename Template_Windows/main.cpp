@@ -76,7 +76,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
-
 			sprite = wiSprite("../Content/logo_small.png");
 			sprite.params.pos = { 100, 100, 0 };
 			sprite.params.siz = { 256, 256 };
@@ -99,7 +98,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			translator.enabled = true;
 			translator.selected.push_back({ .entity = octopusScene });
 		}
-		void Compose(wiGraphics::CommandList cmd) const override {
+		void Compose(wiGraphics::CommandList cmd) const override
+		{
 			RenderPath3D::Compose(cmd);
 			translator.Draw(*camera, cmd);
 		}
@@ -134,9 +134,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				});
 
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
-			for (int i = 0; i < strobeLightsComponents.size(); i++)
+			for (auto component : strobeLightsComponents)
 			{
-				strobeLightsComponents[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
+				component->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
 			}
 
 			RenderPath3D::Update(dt);
