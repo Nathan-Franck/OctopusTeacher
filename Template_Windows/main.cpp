@@ -60,7 +60,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainComponent.infoDisplay.fpsinfo = true;
 
 	using namespace wiScene;
-	class Myrender : public RenderPath3D {
+	class Myrender : public RenderPath3D
+	{
 		wiSprite sprite;
 		wiSpriteFont font;
 		Entity teapot;
@@ -71,11 +72,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	private:
 
 	public:
-		Myrender() {
+		Myrender()
+		{
 			sprite = wiSprite("../Content/logo_small.png");
-			sprite.params.pos = XMFLOAT3(100, 100, 0);
-			sprite.params.siz = XMFLOAT2(256, 256);
-			sprite.anim.wobbleAnim.amount = XMFLOAT2(.2f, .2f);
+			sprite.params.pos = { 100, 100, 0 };
+			sprite.params.siz = { 256, 256 };
+			sprite.anim.wobbleAnim.amount = { .2f, .2f };
 			AddSprite(&sprite);
 
 			font.SetText("Hello World!");
@@ -85,51 +87,42 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			AddFont(&font);
 
 			teapot = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
-			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
-
-			// Gather entity/components from scene to animate
-
-			// 💡
-			// 
-			//auto nameManager = GetScene().GetManager<NameComponent>();
-			//auto firstName = nameManager->GetComponent(nameManager->GetEntity(0))->name;
-			//auto firstName_2 = GetScene().names[0].name;
-			//std::stringstream ss;
-			//ss << std::endl << firstName << " OR.... " << firstName_2 << std::endl;
-			//wiBackLog::post(ss.str().c_str());
-			// 
-			// 💡 Conclusion ---- GetScene().GetManager<NameComponent>(); works same as GetScene().names!
-
-			limbs = getArms(octopusScene);
 			strobeLights = getEntitiesForParent<LightComponent>(teapot);
+
+			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
+			limbs = getLimbsForOctopusScene(octopusScene);
 		}
-		void Update(float dt) override {
+		void Update(float dt) override
+		{
 			time += dt;
 			TransformComponent* transform = GetScene().transforms.GetComponent(teapot);
-			if (transform != nullptr) {
-				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
+			if (transform != nullptr)
+			{
+				transform->RotateRollPitchYaw({ 0, 1.0f * dt, 0 });
 			}
 
 			// 💃 Dance octopus, dance!
 			int limbIndex = 0;
-			std::ranges::for_each(limbs, [&](std::vector<Entity> limb) {
-				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>());
-				int boneIndex = 0;
-				std::ranges::for_each(bones, [&](TransformComponent* bone) {
-					bone->SetDirty();
-					XMVECTOR quat = XMLoadFloat4(&bone->rotation_local);
-					XMVECTOR x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 0.3 * 3.14f / 180.0f, 0, 0);
-					quat = XMQuaternionMultiply(x, quat);
-					quat = XMQuaternionNormalize(quat);
-					XMStoreFloat4(&bone->rotation_local, quat);
-					boneIndex++;
+			std::ranges::for_each(limbs, [&](auto limb)
+				{
+					auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>());
+					int boneIndex = 0;
+					std::ranges::for_each(bones, [&](auto bone) {
+						bone->SetDirty();
+						auto quat = XMLoadFloat4(&bone->rotation_local);
+						auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 0.3 * 3.14f / 180.0f, 0, 0);
+						quat = XMQuaternionMultiply(x, quat);
+						quat = XMQuaternionNormalize(quat);
+						XMStoreFloat4(&bone->rotation_local, quat);
+						boneIndex++;
+						});
+					limbIndex++;
 				});
-				limbIndex++;
-			});
 
 			auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>());
-			for (int i = 0; i < strobeLightsComponents.size(); i++) {
+			for (int i = 0; i < strobeLightsComponents.size(); i++)
+			{
 				strobeLightsComponents[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
 			}
 
@@ -162,7 +155,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 //  PURPOSE: Registers the window class.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance) {
+ATOM MyRegisterClass(HINSTANCE hInstance)
+{
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -192,7 +186,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance) {
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+{
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
@@ -222,30 +217,35 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 //  WM_DESTROY  - post a quit message and return
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    switch (message) {
-    case WM_COMMAND: {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+	{
+    case WM_COMMAND:
+		{
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
-            switch (wmId) {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+			switch (wmId)
+			{
+			case IDM_ABOUT:
+				DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+				break;
+			case IDM_EXIT:
+				DestroyWindow(hWnd);
+				break;
+			default:
+				return DefWindowProc(hWnd, message, wParam, lParam);
+			}
         }
-        break;
+		break;
     case WM_SIZE:
     case WM_DPICHANGED:
 		if (mainComponent.is_window_active)
 			mainComponent.SetWindow(hWnd);
         break;
 	case WM_CHAR:
-		switch (wParam) {
+		switch (wParam)
+		{
 		case VK_BACK:
 			if (wiBackLog::isActive())
 				wiBackLog::deletefromInput();
@@ -253,14 +253,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			break;
 		case VK_RETURN:
 			break;
-		default: {
-			const char c = (const char)(TCHAR)wParam;
-			if (wiBackLog::isActive()) {
-				wiBackLog::input(c);
+			default:
+			{
+				const char c = (const char)(TCHAR)wParam;
+				if (wiBackLog::isActive()) {
+					wiBackLog::input(c);
+				}
+				wiTextInputField::AddInput(c);
 			}
-			wiTextInputField::AddInput(c);
-		}
-		break;
+			break;
 		}
 		break;
 	case WM_KILLFOCUS:
@@ -269,13 +270,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_SETFOCUS:
 		mainComponent.is_window_active = true;
 		break;
-    case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+    case WM_PAINT:
+		{	
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hWnd, &ps);
+			// TODO: Add any drawing code that uses hdc here...
+			EndPaint(hWnd, &ps);
+		}
+		break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -286,18 +288,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
     UNREFERENCED_PARAMETER(lParam);
-    switch (message) {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+	}
     return (INT_PTR)FALSE;
 }
