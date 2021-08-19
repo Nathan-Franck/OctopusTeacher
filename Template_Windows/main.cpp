@@ -76,7 +76,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
-			translator.Create();
 
 			sprite = wiSprite("../Content/logo_small.png");
 			sprite.params.pos = { 100, 100, 0 };
@@ -95,10 +94,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 			limbs = getLimbsForOctopusScene(octopusScene);
-			translator.transform = *componentFromEntity<TransformComponent>(octopusScene);
+
+			translator.Create();
+			translator.enabled = true;
+			translator.selected.push_back({ .entity = octopusScene });
+		}
+		void Compose(wiGraphics::CommandList cmd) const override {
+			RenderPath3D::Compose(cmd);
+			translator.Draw(*camera, cmd);
 		}
 		void Update(float dt) override
 		{
+			translator.Update(*this);
+
 			time += dt;
 			TransformComponent* transform = GetScene().transforms.GetComponent(teapot);
 			if (transform != nullptr)
