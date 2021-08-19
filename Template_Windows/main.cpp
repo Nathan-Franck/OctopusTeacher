@@ -111,35 +111,48 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			// Gather entity/components from scene to animate
 
-			auto isOctopus = [](Entity* entity) {
-				auto component = GetScene().names.GetComponent(*entity);
+			// 💡
+			// 
+			//auto nameManager = GetScene().GetManager<NameComponent>();
+			//auto firstName = nameManager->GetComponent(nameManager->GetEntity(0))->name;
+			//auto firstName_2 = GetScene().names[0].name;
+			//std::stringstream ss;
+			//ss << std::endl << firstName << " OR.... " << firstName_2 << std::endl;
+			//wiBackLog::post(ss.str().c_str());
+			// 
+			// 💡 Conclusion ---- GetScene().GetManager<NameComponent>(); works same as GetScene().names!
+
+			auto isOctopus = [](Entity entity) {
+				auto component = GetScene().names.GetComponent(entity);
 				return component->name.compare("OctopusRiggedTopo.glb") == 0;
 			};
-			auto isArmature = [](Entity* entity) {
-				return GetScene().names.GetComponent(*entity)->name.compare("Armature") == 0;
+			auto isArmature = [](Entity entity) {
+				return GetScene().names.GetComponent(entity)->name.compare("Armature") == 0;
 			};
-
-			auto firstName = GetScene().GetManager<NameComponent>()->operator[0]->name;
-			auto firstName_2 = GetScene().names[0].name;
-
-			std::stringstream ss;
-			ss << std::endl << firstName << " OR.... " << firstName_2 << std::endl;
-			wiBackLog::post(ss.str().c_str());
-
-
+			auto isArm = [](Entity entity) {
+				auto name = GetScene().names.GetComponent(entity)->name;
+				auto prefix = name.substr(0, 3);
+				return prefix.compare("Arm") == 0 && name.length() == 4;
+			};
 			auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-			std::ranges::for_each(namedEntsUnderOctopusScene, [](auto namedEnt) {
+			auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
+			auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity.front());
+			auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
+			auto namesUnderArmature = getEntitiesForParent<NameComponent>(armatureEntity.front());
+			auto armsEntities = namesUnderArmature | std::views::filter(isArm);
+			auto skeleton = armsEntities | std::views::transform([](auto armEnt) {
+				auto childEntity = getEntitiesForParent<TransformComponent>(armEnt);
+
+				return armEnt;
+				});
+			std::ranges::for_each(armsEntities, [](auto armEnt) {
 				std::stringstream ss;
-				ss << std::endl << namedEnt << std::endl;
+				ss << std::endl << GetScene().names.GetComponent(armEnt)->name << std::endl;
 				wiBackLog::post(ss.str().c_str());
 			});
-			auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
-			auto namesUnderOctopus = getEntitiesForParent<NameComponent>(*octopusEntity.front());
-			auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
+			
 
-			std::stringstream ss;
-			ss << std::endl << GetScene().names.GetComponent(*armatureEntity.front())->name << std::endl;
-			wiBackLog::post(ss.str().c_str());
+			// GetScene().names.GetComponent(armatureEntity.front())->name -> "Armature" !!!
 		}
 		void Update(float dt) override {
 			time += dt;
