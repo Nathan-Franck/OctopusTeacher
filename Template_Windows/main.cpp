@@ -53,20 +53,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	main.infoDisplay.fpsinfo = true;
 
 	using namespace wiScene;
-	class Myrender : public RenderPath3D
-	{
+	class Myrender : public RenderPath3D {
 		wiSprite sprite;
 		wiSpriteFont font;
 		wiECS::Entity entity;
 		std::vector<LightComponent*> strobeLights;
 		float time;
 	public:
-		Myrender()
-		{
+		Myrender() {
 			sprite = wiSprite("../Content/logo_small.png");
 			sprite.params.pos = XMFLOAT3(100, 100, 0);
 			sprite.params.siz = XMFLOAT2(256, 256);
-			sprite.anim.wobbleAnim.amount = XMFLOAT2(1, 1);
+			sprite.anim.wobbleAnim.amount = XMFLOAT2(.2f, .2f);
 			AddSprite(&sprite);
 
 			font.SetText("Hello World!");
@@ -77,29 +75,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			entity = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
 			size_t count = GetScene().hierarchy.GetCount();
-			for (int i = 0; i < count; i++)
-			{
+			for (int i = 0; i < count; i++) {
 				auto heir = GetScene().hierarchy[i];
 				auto enti = GetScene().hierarchy.GetEntity(i);
 				if (heir.parentID == entity) {
 					auto light = GetScene().lights.GetComponent(enti);
-					if (light != nullptr)
-					{
+					if (light != nullptr) {
 						strobeLights.push_back(light);
 					}
 				}
 			}
 		}
-		void Update(float dt) override
-		{
+		void Update(float dt) override {
 			time += dt;
 			TransformComponent* transform = GetScene().transforms.GetComponent(entity);
-			if (transform != nullptr)
-			{
+			if (transform != nullptr) {
 				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
 			}
-			for (int i = 0; i < strobeLights.size(); i++)
-			{
+			for (int i = 0; i < strobeLights.size(); i++) {
 				strobeLights[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
 			}
 
@@ -111,8 +104,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	main.ActivatePath(&render);
 
 	MSG msg = { 0 };
-	while (msg.message != WM_QUIT)
-	{
+	while (msg.message != WM_QUIT) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -134,8 +126,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 //  PURPOSE: Registers the window class.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
+ATOM MyRegisterClass(HINSTANCE hInstance) {
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -165,15 +156,13 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
+   if (!hWnd) {
       return FALSE;
    }
 
@@ -197,16 +186,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - post a quit message and return
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+    case WM_COMMAND: {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
-            switch (wmId)
-            {
+            switch (wmId) {
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -224,8 +209,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			main.SetWindow(hWnd);
         break;
 	case WM_CHAR:
-		switch (wParam)
-		{
+		switch (wParam) {
 		case VK_BACK:
 			if (wiBackLog::isActive())
 				wiBackLog::deletefromInput();
@@ -233,11 +217,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case VK_RETURN:
 			break;
-		default:
-		{
+		default: {
 			const char c = (const char)(TCHAR)wParam;
-			if (wiBackLog::isActive())
-			{
+			if (wiBackLog::isActive()) {
 				wiBackLog::input(c);
 			}
 			wiTextInputField::AddInput(c);
@@ -251,8 +233,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SETFOCUS:
 		main.is_window_active = true;
 		break;
-    case WM_PAINT:
-        {
+    case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: Add any drawing code that uses hdc here...
@@ -269,17 +250,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
     UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
+    switch (message) {
     case WM_INITDIALOG:
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
