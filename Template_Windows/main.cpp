@@ -44,9 +44,15 @@ std::vector<Entity> getEntitiesForParent(
 }
 
 template <class T>
-std::function<T*(Entity*)> componentFromEntity() {
-	auto result = [](Entity* ent) { return GetScene().GetManager<T>().GetComponent(*ent); };
+std::function<T*(Entity)> componentFromEntity() {
+	auto result = [](Entity ent) { return GetScene().GetManager<T>()->GetComponent(ent); };
 	return result;
+}
+
+template <std::ranges::range R>
+auto to_vector(R&& r) {
+	auto r_common = r | std::views::common;
+	return std::vector(r_common.begin(), r_common.end());
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -89,6 +95,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		wiSpriteFont font;
 		Entity teapot;
 		Entity octopusScene;
+		std::vector<Entity> strobeLights;
+		std::vector<std::vector<Entity>> limbs;
 		float time;
 	private:
 
@@ -140,19 +148,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
 			auto namesUnderArmature = getEntitiesForParent<NameComponent>(armatureEntity.front());
 			auto armsEntities = namesUnderArmature | std::views::filter(isArm);
-			auto skeleton = armsEntities | std::views::transform([](auto armEnt) {
-				auto childEntity = getEntitiesForParent<TransformComponent>(armEnt);
-
-				return armEnt;
-				});
-			std::ranges::for_each(armsEntities, [](auto armEnt) {
-				std::stringstream ss;
-				ss << std::endl << GetScene().names.GetComponent(armEnt)->name << std::endl;
-				wiBackLog::post(ss.str().c_str());
-			});
-			
-
-			// GetScene().names.GetComponent(armatureEntity.front())->name -> "Armature" !!!
+			limbs = to_vector(armsEntities
+				| std::views::transform([](Entity armEnt) {
+					std::vector<Entity> bones{ armEnt };
+					Entity parent = armEnt;
+					while (true) {
+						std::vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
+						if (childEntities.size() == 0) break;
+						Entity childEntity = childEntities.front();
+						bones.push_back(childEntity);
+						parent = childEntity;
+					}
+					return bones;
+				}));
+			strobeLights = getEntitiesForParent<LightComponent>(teapot);
 		}
 		void Update(float dt) override {
 			time += dt;
@@ -160,13 +169,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			if (transform != nullptr) {
 				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
 			}
+			std::ranges::for_each(limbs, [](auto skeletonLimb) {
+				std::stringstream ss;
+				ss << std::endl << GetScene().names.GetComponent(skeletonLimb[3])->name << std::endl;
+				wiBackLog::post(ss.str().c_str());
+			});
 
 
-			//auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
-			//auto strobeLights = lightsUnderTeapot | std::views::transform(componentFromEntity(GetScene().lights));
-			//for (int i = 0; i < strobeLights.size(); i++) {
-			//	strobeLights[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
-			//}
+			auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
+			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>());
+			for (int i = 0; i < strobeLightsComponents.size(); i++) {
+				strobeLightsComponents[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
+			}
 
 			RenderPath3D::Update(dt);
 		}
