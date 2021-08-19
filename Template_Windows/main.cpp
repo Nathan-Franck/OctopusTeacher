@@ -21,34 +21,32 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-template<class T>
-class getComponentsUnderParentResult  {
-public:
-	std::vector<T*> components;
-	std::vector<size_t> indices;
-};
-
 using namespace wiECS;
 using namespace wiScene;
+
 template<class T>
-getComponentsUnderParentResult<T> getComponentsUnderParent(
-	ComponentManager<T>& manager,
+std::vector<Entity> getEntitiesForParent(
 	Entity parent
 ) {
-	std::vector<T*> components;
-	std::vector<size_t> componentIndices;
+	std::vector<Entity> entities;
 	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
-		auto heir = GetScene().hierarchy[i];
-		auto enti = GetScene().hierarchy.GetEntity(i);
-		if (heir.parentID == parent) {
-			auto component = manager.GetComponent(enti);
+		auto heirarchyComponent = GetScene().hierarchy[i];
+		auto entity = GetScene().hierarchy.GetEntity(i);
+		if (heirarchyComponent.parentID == parent) {
+			auto manager = GetScene().GetManager<T>();
+			auto component = manager->GetComponent(entity);
 			if (component != nullptr) {
-				components.push_back(component);
-				componentIndices.push_back(manager.GetIndex(enti));
+				entities.push_back(entity);
 			}
 		}
 	}
-	return { components, componentIndices };
+	return entities;
+}
+
+template <class T>
+std::function<T*(Entity*)> componentFromEntity() {
+	auto result = [](Entity* ent) { return GetScene().GetManager<T>().GetComponent(*ent); };
+	return result;
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -90,7 +88,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		wiSprite sprite;
 		wiSpriteFont font;
 		Entity teapot;
-		Entity octopus;
+		Entity octopusScene;
 		float time;
 	private:
 
@@ -109,10 +107,39 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			AddFont(&font);
 
 			teapot = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
-			octopus = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
-			//Scene scene;
-			//ImportModel_OBJ("../CustomContent/OctopusRiggedTopo.obj", scene);
-			//GetScene().Merge(scene);
+			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
+
+			// Gather entity/components from scene to animate
+
+			auto isOctopus = [](Entity* entity) {
+				auto component = GetScene().names.GetComponent(*entity);
+				return component->name.compare("OctopusRiggedTopo.glb") == 0;
+			};
+			auto isArmature = [](Entity* entity) {
+				return GetScene().names.GetComponent(*entity)->name.compare("Armature") == 0;
+			};
+
+			auto firstName = GetScene().GetManager<NameComponent>()->operator[0]->name;
+			auto firstName_2 = GetScene().names[0].name;
+
+			std::stringstream ss;
+			ss << std::endl << firstName << " OR.... " << firstName_2 << std::endl;
+			wiBackLog::post(ss.str().c_str());
+
+
+			auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
+			std::ranges::for_each(namedEntsUnderOctopusScene, [](auto namedEnt) {
+				std::stringstream ss;
+				ss << std::endl << namedEnt << std::endl;
+				wiBackLog::post(ss.str().c_str());
+			});
+			auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
+			auto namesUnderOctopus = getEntitiesForParent<NameComponent>(*octopusEntity.front());
+			auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
+
+			std::stringstream ss;
+			ss << std::endl << GetScene().names.GetComponent(*armatureEntity.front())->name << std::endl;
+			wiBackLog::post(ss.str().c_str());
 		}
 		void Update(float dt) override {
 			time += dt;
@@ -121,42 +148,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				transform->RotateRollPitchYaw(XMFLOAT3(0, 1.0f * dt, 0));
 			}
 
-			// Gather entity/components from scene to animate
 
-			auto isOctopus = [](NameComponent* component) {
-				return component->name.compare("OctopusRiggedTopo.glb") == 0;
-			};
-			auto isArmature = [](NameComponent* component) {
-				return component->name.compare("Armature") == 0;
-			};
-
-			auto nameComponentsResult = getComponentsUnderParent(GetScene().names, octopus);
-			auto names = nameComponentsResult.components;
-			auto octopusModel = std::find_if(names.begin(), names.end(), isOctopus);
-			auto indexFromResult = std::distance(names.begin(), octopusModel);
-			auto names_octopus = getComponentsUnderParent(
-				GetScene().names,
-				GetScene().names.GetEntity(nameComponentsResult.indices[indexFromResult])
-			).components;
-			auto armature = names_octopus | std::views::filter(isArmature);
-			std::vector vec{ 1, 2, 3, 4, 5, 6 };
-			auto v = std::views::reverse(vec);
-			//auto indexFromResult_armature = std::distance(names_octopus.begin(), armature);
-			//auto armature = std::find_if(names_2.begin(), names_2.end(), [](NameComponent* component) {
-			//	std::stringstream ss;
-			//	ss << std::endl << component->name << std::endl;
-			//	wiBackLog::post(ss.str().c_str());
-			//	return component->name.compare("Armature") == 0;
-			//});
-
-			//std::stringstream ss;
-			//ss << std::endl << names_2[0]->name << std::endl;
-			//wiBackLog::post(ss.str().c_str());
-
-			auto strobeLights = getComponentsUnderParent(GetScene().lights, teapot).components;
-			for (int i = 0; i < strobeLights.size(); i++) {
-				strobeLights[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
-			}
+			//auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
+			//auto strobeLights = lightsUnderTeapot | std::views::transform(componentFromEntity(GetScene().lights));
+			//for (int i = 0; i < strobeLights.size(); i++) {
+			//	strobeLights[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
+			//}
 
 			RenderPath3D::Update(dt);
 		}

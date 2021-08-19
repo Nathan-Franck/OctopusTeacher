@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
+#include <typeinfo>
+#include <typeindex>
 
 class wiArchive;
 
@@ -1277,6 +1280,40 @@ namespace wiScene
 		ComponentManager<SoundComponent> sounds;
 		ComponentManager<InverseKinematicsComponent> inverse_kinematics;
 		ComponentManager<SpringComponent> springs;
+
+		std::map<std::type_index, void*> components {
+			{ typeid(NameComponent), (void*)&names },
+			{ typeid(LayerComponent), (void*)&layers },
+			{ typeid(TransformComponent), (void*)&transforms },
+			{ typeid(PreviousFrameTransformComponent), (void*)&prev_transforms },
+			{ typeid(HierarchyComponent), (void*)&hierarchy },
+			{ typeid(MaterialComponent), (void*)&materials },
+			{ typeid(MeshComponent), (void*)&meshes },
+			{ typeid(ImpostorComponent), (void*)&impostors },
+			{ typeid(ObjectComponent), (void*)&objects },
+			{ typeid(AABB), (void*)&aabb_objects },
+			{ typeid(RigidBodyPhysicsComponent), (void*)&rigidbodies },
+			{ typeid(SoftBodyPhysicsComponent), (void*)&softbodies },
+			{ typeid(ArmatureComponent), (void*)&armatures },
+			{ typeid(LightComponent), (void*)&lights },
+			{ typeid(CameraComponent), (void*)&cameras },
+			{ typeid(EnvironmentProbeComponent), (void*)&probes },
+			{ typeid(ForceFieldComponent), (void*)&forces },
+			{ typeid(DecalComponent), (void*)&decals },
+			{ typeid(AnimationComponent), (void*)&animations },
+			{ typeid(AnimationDataComponent), (void*)&animation_datas },
+			{ typeid(wiEmittedParticle), (void*)&emitters },
+			{ typeid(wiHairParticle), (void*)&hairs },
+			{ typeid(WeatherComponent), (void*)&weathers },
+			{ typeid(SoundComponent), (void*)&sounds },
+			{ typeid(InverseKinematicsComponent), (void*)&inverse_kinematics },
+			{ typeid(SpringComponent), (void*)&springs },
+		};
+
+		template <typename T>
+		ComponentManager<T>* GetManager() {
+			return (ComponentManager<T>*)components[typeid(T)];
+		}
 
 		// Non-serialized attributes:
 		float dt = 0;
