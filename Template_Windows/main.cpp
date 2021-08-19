@@ -118,7 +118,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				std::ranges::for_each(bones, [&](TransformComponent* bone) {
 					bone->SetDirty();
 					XMVECTOR quat = XMLoadFloat4(&bone->rotation_local);
-					XMVECTOR x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 3 * 3.14f / 180.0f, 0, 0);
+					XMVECTOR x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 0.3 * 3.14f / 180.0f, 0, 0);
 					quat = XMQuaternionMultiply(x, quat);
 					quat = XMQuaternionNormalize(quat);
 					XMStoreFloat4(&bone->rotation_local, quat);
