@@ -116,22 +116,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			// 💃 Dance octopus, dance!
 			int limbIndex = 0;
-			std::ranges::for_each(limbs, [&](auto limb)
+			for (auto limb : limbs)
+			{
+				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
+				int boneIndex = 0;
+				for (auto bone : bones)
 				{
-					auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
-					int boneIndex = 0;
-					std::ranges::for_each(bones, [&](auto bone)
-						{
-							bone->SetDirty();
-							XMVECTOR quat{ 0, 0, 0, 1 };
-							auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
-							quat = XMQuaternionMultiply(x, quat);
-							quat = XMQuaternionNormalize(quat);
-							XMStoreFloat4(&bone->rotation_local, quat);
-							boneIndex++;
-						});
-					limbIndex++;
-				});
+					bone->SetDirty();
+					XMVECTOR quat{ 0, 0, 0, 1 };
+					auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
+					quat = XMQuaternionMultiply(x, quat);
+					quat = XMQuaternionNormalize(quat);
+					XMStoreFloat4(&bone->rotation_local, quat);
+					boneIndex++;
+				}
+				limbIndex++;
+			}
 
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
 			for (auto component : strobeLightsComponents)
