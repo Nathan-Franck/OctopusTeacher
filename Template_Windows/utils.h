@@ -6,13 +6,6 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-template <std::ranges::range R>
-auto to_vector(R&& r)
-{
-	auto r_common = r | std::views::common;
-	return std::vector(r_common.begin(), r_common.end());
-}
-
 template<class T>
 std::vector<Entity> getEntitiesForParent(Entity parent)
 {
@@ -59,7 +52,7 @@ vector<vector<Entity>> getLimbsForOctopusScene(Entity octopusScene)
 	auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
 	auto namesUnderArmature = getEntitiesForParent<NameComponent>(armatureEntity.front());
 	auto armsEntities = namesUnderArmature | std::views::filter(isArm);
-	return to_vector(armsEntities
+	auto result = armsEntities
 		| std::views::transform([](Entity armEnt)
 			{
 				std::vector<Entity> bones{ }; //armEnt
@@ -72,5 +65,7 @@ vector<vector<Entity>> getLimbsForOctopusScene(Entity octopusScene)
 					parent = childEntity;
 				}
 				return bones;
-			}));
+			})
+		| std::views::common;
+	return std::vector(result.begin(), result.end());
 }
