@@ -32,11 +32,7 @@ std::vector<Entity> getEntitiesForParent(Entity parent)
 }
 
 template <class T>
-std::function<T* (Entity)> componentFromEntity()
-{
-	auto result = [](Entity ent) { return GetScene().GetManager<T>()->GetComponent(ent); };
-	return result;
-}
+const std::function<T* (Entity)> componentFromEntity = [](Entity ent) { return GetScene().GetManager<T>()->GetComponent(ent); };
 
 vector<vector<Entity>> getLimbsForOctopusScene(Entity octopusScene)
 {

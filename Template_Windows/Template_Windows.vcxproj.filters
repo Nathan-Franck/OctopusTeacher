@@ -28,12 +28,18 @@
     <ClInclude Include="utils.h">
       <Filter>Code</Filter>
     </ClInclude>
+    <ClInclude Include="..\Editor\Translator.h">
+      <Filter>Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Code</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Editor\Translator.cpp">
       <Filter>Code</Filter>
     </ClCompile>
   </ItemGroup>

@@ -106,6 +106,7 @@ xcopy "$(SolutionDir)WickedEngine\d3dcompiler_47.dll" "$(OutDir)" /c /y</Command
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Editor\Translator.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -113,6 +114,7 @@ xcopy "$(SolutionDir)WickedEngine\d3dcompiler_47.dll" "$(OutDir)" /c /y</Command
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Editor\Translator.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

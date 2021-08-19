@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <ranges>
+#include "../Editor/Translator.h"
 
 #define MAX_LOADSTRING 100
 
@@ -62,6 +63,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	using namespace wiScene;
 	class Myrender : public RenderPath3D
 	{
+		Translator translator;
 		wiSprite sprite;
 		wiSpriteFont font;
 		Entity teapot;
@@ -74,6 +76,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
+			translator.Create();
+
 			sprite = wiSprite("../Content/logo_small.png");
 			sprite.params.pos = { 100, 100, 0 };
 			sprite.params.siz = { 256, 256 };
@@ -91,6 +95,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 			limbs = getLimbsForOctopusScene(octopusScene);
+			translator.transform = *componentFromEntity<TransformComponent>(octopusScene);
 		}
 		void Update(float dt) override
 		{
@@ -105,22 +110,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			int limbIndex = 0;
 			std::ranges::for_each(limbs, [&](auto limb)
 				{
-					auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>());
+					auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
 					int boneIndex = 0;
-					std::ranges::for_each(bones, [&](auto bone) {
-						bone->SetDirty();
-						XMVECTOR quat{ 0, 0, 0, 1 };
-						auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
-						quat = XMQuaternionMultiply(x, quat);
-						quat = XMQuaternionNormalize(quat);
-						XMStoreFloat4(&bone->rotation_local, quat);
-						boneIndex++;
+					std::ranges::for_each(bones, [&](auto bone)
+						{
+							bone->SetDirty();
+							XMVECTOR quat{ 0, 0, 0, 1 };
+							auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
+							quat = XMQuaternionMultiply(x, quat);
+							quat = XMQuaternionNormalize(quat);
+							XMStoreFloat4(&bone->rotation_local, quat);
+							boneIndex++;
 						});
 					limbIndex++;
 				});
 
-			auto lightsUnderTeapot = getEntitiesForParent<LightComponent>(teapot);
-			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>());
+			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
 			for (int i = 0; i < strobeLightsComponents.size(); i++)
 			{
 				strobeLightsComponents[i]->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
