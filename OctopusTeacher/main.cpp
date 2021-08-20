@@ -93,6 +93,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 			limbs = getLimbsForOctopusScene(octopusScene);
+			// Size limb bones down closer to the tips
+			int limbIndex = 0;
+			for (auto limb : limbs)
+			{
+				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
+				int boneIndex = 0;
+				for (auto bone : bones)
+				{
+					bone->SetDirty();
+					auto scale = XMLoadFloat3(&bone->scale_local);
+					scale = XMVectorScale(scale, 1.0 / (boneIndex * 0.05f + 1));
+					 XMStoreFloat3(&bone->scale_local, scale);
+					boneIndex++;
+				}
+				limbIndex++;
+			}
 
 			GetScene().materials.Update(findWithName("Material"), {
 				.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
