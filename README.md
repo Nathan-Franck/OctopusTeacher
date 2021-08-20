@@ -1,6 +1,7 @@
 
 # Octopus Teacher
 
+![image](CustomContent/OctopusTeacherIcon_Small.png)
 ![image](Content/logo_small.png)
 ## Forked From [Wicked Engine](https://github.com/turanszkij/WickedEngine)
 
