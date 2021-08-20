@@ -8,7 +8,7 @@
 ## Objectives
 
 * Provide myself a crash-course in modern C++ programming techniques and the latest and greatest in rendering
-* Make a cool little demo about an octopus!
+* Make a cool little octopus demo
 
 ## Progress Milestones
 ### Day 1
