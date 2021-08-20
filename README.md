@@ -28,7 +28,7 @@
 ![image](https://user-images.githubusercontent.com/6273324/130273976-b9fa3ab8-6bcb-4e90-967d-258d374e9328.png)
 * Using more ergonomic query system (c++20 is fun!) to get the octopus tentacles out into new vectors for use in procedural animation
 
-![image](https://user-images.githubusercontent.com/6273324/130274069-193aa50b-d103-4c21-a4af-37d3a37f825b.png)
+![image](https://user-images.githubusercontent.com/6273324/130282790-41121cb6-1b99-475b-8799-3a803df7bdf8.png)
 * Simple animation to move newly gathered octopus appendages!
 
 ![image](https://user-images.githubusercontent.com/6273324/130274958-e57cef68-d94f-478e-9b24-3753e04f83e7.png)
