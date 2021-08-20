@@ -1,4 +1,4 @@
-// TemplateWindows.cpp : Defines the entry point for the application.
+// OctopusTeacher.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
@@ -43,7 +43,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_TEMPLATEWINDOWS, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_OCTOPUS_TEACHER, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -52,7 +52,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_TEMPLATEWINDOWS));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_OCTOPUS_TEACHER));
 
 	// just show some basic info:
 	mainComponent.infoDisplay.active = true;
@@ -179,10 +179,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_TEMPLATEWINDOWS));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_OCTOPUS_TEACHER));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_TEMPLATEWINDOWS);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_OCTOPUS_TEACHER);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 

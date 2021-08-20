@@ -31,7 +31,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_TEMPLATEWINDOWS     ICON                    "TemplateWindows.ico"
+IDI_OCTOPUS_TEACHER     ICON                    "OctopusTeacher.ico"
 
 IDI_SMALL               ICON                    "small.ico"
 
@@ -41,7 +41,7 @@ IDI_SMALL               ICON                    "small.ico"
 // Menu
 //
 
-IDC_TEMPLATEWINDOWS MENU
+IDC_OCTOPUS_TEACHER MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -59,7 +59,7 @@ END
 // Accelerator
 //
 
-IDC_TEMPLATEWINDOWS ACCELERATORS
+IDC_OCTOPUS_TEACHER ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -73,12 +73,12 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About Template_Windows"
+CAPTION "About OctopusTeacher"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "Wicked Engine Template",IDC_STATIC,42,14,114,8,SS_NOPREFIX
-    LTEXT           "Created by: Janos Turanszki",IDC_STATIC,42,26,114,8
+    LTEXT           "Octopus Teacher",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Created by: Nathan Franck",IDC_STATIC,42,26,114,8
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
 
@@ -140,8 +140,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Wicked Engine Template"
-    IDC_TEMPLATEWINDOWS     "TEMPLATEWINDOWS"
+    IDS_APP_TITLE           "Octopus Teacher"
+    IDC_OCTOPUS_TEACHER     "OCTOPUS_TEACHER"
 END
 
 #endif    // English (United States) resources
