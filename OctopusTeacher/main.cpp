@@ -70,6 +70,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Entity octopusScene;
 		std::vector<Entity> strobeLights;
 		std::vector<std::vector<Entity>> limbs;
+		Entity testTarget;
 		float time;
 	private:
 
@@ -93,6 +94,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 			limbs = getLimbsForOctopusScene(octopusScene);
+
 			// Size limb bones down closer to the tips
 			int limbIndex = 0;
 			for (auto limb : limbs)
@@ -110,14 +112,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				limbIndex++;
 			}
 
+			// Hard-coding octopus coloration for now
 			GetScene().materials.Update(findWithName("Material"), {
 				.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
 				.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f),
 			});
 
+			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
+			auto transform = GetScene().transforms.GetComponent(testTarget);
+			transform->translation_local = { 0, 0, 15 };
+			transform->SetDirty();
+			transform->UpdateTransform();
+
 			translator.Create();
 			translator.enabled = true;
-			translator.selected.push_back({ .entity = octopusScene });
+			translator.selected.push_back({ .entity = testTarget });
 		}
 		void Compose(wiGraphics::CommandList cmd) const override
 		{
@@ -126,6 +135,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		void Update(float dt) override
 		{
+
 			translator.Update(*this);
 
 			time += dt;
@@ -153,6 +163,59 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				}
 				limbIndex++;
 			}
+
+			// Simple grasping code
+			struct Segment {
+				float length;
+			};
+
+			auto bones = limbs[0];
+			int boneIndex = 0;
+			vector<Segment> segments;
+			for (auto bone : bones) {
+				if (boneIndex >= bones.size() - 1)
+				{
+					segments.push_back({ .01f });
+					break;
+				}
+				auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
+				auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
+				auto firstPosition = XMLoadFloat3(&first);
+				auto secondPosition = XMLoadFloat3(&second);
+				auto length = wiMath::Distance(firstPosition, secondPosition);
+				segments.push_back({ length });
+				boneIndex++;
+			}
+
+			boneIndex = 0;
+			float distanceTravelled = 0;
+			auto target = componentFromEntity<TransformComponent>(testTarget)->GetPosition();
+			auto start = componentFromEntity<TransformComponent>(limbs[0][0])->GetPosition();
+			float targetDistance = wiMath::Distance(
+				XMLoadFloat3(&target),
+				XMLoadFloat3(&start)
+			);
+			for (auto boneEnt : bones) {
+				auto bone = componentFromEntity<TransformComponent>(boneEnt);
+				bone->SetDirty();
+				XMVECTOR quat{ 0, 0, 0, 1 };
+				XMVECTOR x;
+				if (distanceTravelled > targetDistance)
+				{
+					x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
+				}
+				else
+				{
+					x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
+				}
+				quat = XMQuaternionMultiply(x, quat);
+				quat = XMQuaternionNormalize(quat);
+				XMStoreFloat4(&bone->rotation_local, quat);
+				distanceTravelled += segments[boneIndex].length;
+				boneIndex++;
+			}
+
+
 
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
 			for (auto component : strobeLightsComponents)

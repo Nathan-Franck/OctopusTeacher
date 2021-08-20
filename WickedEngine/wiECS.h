@@ -177,7 +177,8 @@ namespace wiECS
 			// Also push corresponding entity:
 			entities.push_back(entity);
 
-			return components.back();
+			Component& result = components.back();
+			return result;
 		}
 
 		// Create a new component and retrieve a reference to it
