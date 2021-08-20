@@ -94,6 +94,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 			limbs = getLimbsForOctopusScene(octopusScene);
 
+			GetScene().materials.Update(findWithName("Material"), {
+				.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
+				.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f),
+			});
+
 			translator.Create();
 			translator.enabled = true;
 			translator.selected.push_back({ .entity = octopusScene });

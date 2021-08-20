@@ -180,6 +180,20 @@ namespace wiECS
 			return components.back();
 		}
 
+		// Create a new component and retrieve a reference to it
+		inline Component& Update(Entity entity, Component component)
+		{
+			// INVALID_ENTITY is not allowed!
+			assert(entity != INVALID_ENTITY);
+
+			auto existingIndex = lookup.find(entity);
+			assert(existingIndex != lookup.end());
+
+			components[existingIndex->second] = component;
+
+			return component;
+		}
+
 		// Remove a component of a certain entity if it exists
 		inline void Remove(Entity entity)
 		{
