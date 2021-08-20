@@ -31,6 +31,9 @@
     <ClInclude Include="..\Editor\Translator.h">
       <Filter>Code</Filter>
     </ClInclude>
+    <ClInclude Include="..\WickedEngine\Octopus.h">
+      <Filter>Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

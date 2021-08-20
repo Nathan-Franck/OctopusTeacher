@@ -8,6 +8,7 @@
 #include <string>
 #include <ranges>
 #include "../Editor/Translator.h"
+#include "Octopus.h"
 
 #define MAX_LOADSTRING 100
 
@@ -67,9 +68,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		wiSprite sprite;
 		wiSpriteFont font;
 		Entity teapot;
-		Entity octopusScene;
+		Octopus octopus;
 		std::vector<Entity> strobeLights;
-		std::vector<std::vector<Entity>> limbs;
 		Entity testTarget;
 		float time;
 	private:
@@ -92,37 +92,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			teapot = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
 			strobeLights = getEntitiesForParent<LightComponent>(teapot);
 
-			octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
-			limbs = getLimbsForOctopusScene(octopusScene);
-
-			// Size limb bones down closer to the tips
-			int limbIndex = 0;
-			for (auto limb : limbs)
-			{
-				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
-				int boneIndex = 0;
-				for (auto bone : bones)
-				{
-					bone->SetDirty();
-					auto scale = XMLoadFloat3(&bone->scale_local);
-					scale = XMVectorScale(scale, 1.0 / (boneIndex * 0.05f + 1));
-					 XMStoreFloat3(&bone->scale_local, scale);
-					boneIndex++;
-				}
-				limbIndex++;
-			}
-
-			// Hard-coding octopus coloration for now
-			GetScene().materials.Update(findWithName("Material"), {
-				.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
-				.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f),
-			});
+			auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
 			auto transform = GetScene().transforms.GetComponent(testTarget);
 			transform->translation_local = { 0, 0, 15 };
 			transform->SetDirty();
 			transform->UpdateTransform();
+
+			octopus = Octopus( testTarget, octopusScene );
 
 			translator.Create();
 			translator.enabled = true;
@@ -135,87 +113,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		void Update(float dt) override
 		{
+			time += dt;
 
 			translator.Update(*this);
 
-			time += dt;
 			TransformComponent* transform = GetScene().transforms.GetComponent(teapot);
 			if (transform != nullptr)
 			{
 				transform->RotateRollPitchYaw({ 0, 1.0f * dt, 0 });
 			}
 
-			// 💃 Dance octopus, dance!
-			int limbIndex = 0;
-			for (auto limb : limbs)
-			{
-				auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
-				int boneIndex = 0;
-				for (auto bone : bones)
-				{
-					bone->SetDirty();
-					XMVECTOR quat{ 0, 0, 0, 1 };
-					auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
-					quat = XMQuaternionMultiply(x, quat);
-					quat = XMQuaternionNormalize(quat);
-					XMStoreFloat4(&bone->rotation_local, quat);
-					boneIndex++;
-				}
-				limbIndex++;
-			}
-
-			// Simple grasping code
-			struct Segment {
-				float length;
-			};
-
-			auto bones = limbs[0];
-			int boneIndex = 0;
-			vector<Segment> segments;
-			for (auto bone : bones) {
-				if (boneIndex >= bones.size() - 1)
-				{
-					segments.push_back({ .01f });
-					break;
-				}
-				auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
-				auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
-				auto firstPosition = XMLoadFloat3(&first);
-				auto secondPosition = XMLoadFloat3(&second);
-				auto length = wiMath::Distance(firstPosition, secondPosition);
-				segments.push_back({ length });
-				boneIndex++;
-			}
-
-			boneIndex = 0;
-			float distanceTravelled = 0;
-			auto target = componentFromEntity<TransformComponent>(testTarget)->GetPosition();
-			auto start = componentFromEntity<TransformComponent>(limbs[0][0])->GetPosition();
-			float targetDistance = wiMath::Distance(
-				XMLoadFloat3(&target),
-				XMLoadFloat3(&start)
-			);
-			for (auto boneEnt : bones) {
-				auto bone = componentFromEntity<TransformComponent>(boneEnt);
-				bone->SetDirty();
-				XMVECTOR quat{ 0, 0, 0, 1 };
-				XMVECTOR x;
-				if (distanceTravelled > targetDistance)
-				{
-					x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
-				}
-				else
-				{
-					x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
-				}
-				quat = XMQuaternionMultiply(x, quat);
-				quat = XMQuaternionNormalize(quat);
-				XMStoreFloat4(&bone->rotation_local, quat);
-				distanceTravelled += segments[boneIndex].length;
-				boneIndex++;
-			}
-
-
+			octopus.Update(time);
 
 			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
 			for (auto component : strobeLightsComponents)
