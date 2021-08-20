@@ -33,16 +33,15 @@ vector<vector<Entity>> getLimbsForOctopusScene(Entity octopusScene)
 {
 	auto isOctopus = [](Entity entity)
 	{
-		auto component = GetScene().names.GetComponent(entity);
-		return component->name.compare("OctopusRiggedTopo.glb") == 0;
+		return componentFromEntity<NameComponent>(entity)->name.compare("OctopusRiggedTopo.glb") == 0;
 	};
 	auto isArmature = [](Entity entity)
 	{
-		return GetScene().names.GetComponent(entity)->name.compare("Armature") == 0;
+		return componentFromEntity<NameComponent>(entity)->name.compare("Armature") == 0;
 	};
 	auto isArm = [](Entity entity)
 	{
-		auto name = GetScene().names.GetComponent(entity)->name;
+		auto name = componentFromEntity<NameComponent>(entity)->name;
 		auto prefix = name.substr(0, 3);
 		return prefix.compare("Arm") == 0 && name.length() == 4;
 	};
