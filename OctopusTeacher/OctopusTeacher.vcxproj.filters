@@ -31,7 +31,7 @@
     <ClInclude Include="..\Editor\Translator.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="..\WickedEngine\Octopus.h">
+    <ClInclude Include="Octopus.h">
       <Filter>Code</Filter>
     </ClInclude>
   </ItemGroup>

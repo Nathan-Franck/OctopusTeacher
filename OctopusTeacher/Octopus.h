@@ -69,7 +69,7 @@ struct Octopus {
 		int limbIndex = 0;
 		for (auto limb : limbs)
 		{
-			auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
+			auto bones = limb | std::views::transform(mutableComponentFromEntity<TransformComponent>);
 			int boneIndex = 0;
 			for (auto bone : bones)
 			{
@@ -94,11 +94,10 @@ struct Octopus {
 		int limbIndex = 0;
 		for (auto limb : limbs)
 		{
-			auto bones = limb | std::views::transform(componentFromEntity<TransformComponent>);
+			auto bones = limb | std::views::transform(mutableComponentFromEntity<TransformComponent>);
 			int boneIndex = 0;
 			for (auto bone : bones)
 			{
-				bone->SetDirty();
 				XMVECTOR quat{ 0, 0, 0, 1 };
 				auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
 				quat = XMQuaternionMultiply(x, quat);
@@ -143,8 +142,7 @@ struct Octopus {
 			XMLoadFloat3(&start)
 		);
 		for (auto boneEnt : bones) {
-			auto bone = componentFromEntity<TransformComponent>(boneEnt);
-			bone->SetDirty();
+			auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 			XMVECTOR quat{ 0, 0, 0, 1 };
 			XMVECTOR x;
 			if (distanceTravelled > targetDistance)

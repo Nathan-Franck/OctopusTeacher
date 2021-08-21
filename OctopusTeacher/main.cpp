@@ -117,7 +117,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			translator.Update(*this);
 
-			TransformComponent* transform = GetScene().transforms.GetComponent(teapot);
+			auto transform = mutableComponentFromEntity<TransformComponent>(teapot);
 			if (transform != nullptr)
 			{
 				transform->RotateRollPitchYaw({ 0, 1.0f * dt, 0 });
@@ -125,7 +125,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopus.Update(time);
 
-			auto strobeLightsComponents = strobeLights | std::views::transform(componentFromEntity<LightComponent>);
+			auto strobeLightsComponents = strobeLights | std::views::transform(mutableComponentFromEntity<LightComponent>);
 			for (auto component : strobeLightsComponents)
 			{
 				component->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };

@@ -25,8 +25,15 @@ std::vector<Entity> getEntitiesForParent(Entity parent)
 }
 
 template <class T>
-T* componentFromEntity(Entity ent) {
+const T* componentFromEntity(Entity ent) {
 	return GetScene().GetManager<T>()->GetComponent(ent);
+}
+
+template <class T>
+T* mutableComponentFromEntity(Entity ent) {
+	auto component = GetScene().GetManager<T>()->GetComponent(ent);
+	GetScene().WhenMutable(component);
+	return component;
 }
 
 bool isAncestorOfEntity(Entity entity, Entity ancestor) {

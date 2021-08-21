@@ -1315,6 +1315,13 @@ namespace wiScene
 			return (ComponentManager<T>*)components[typeid(T)];
 		}
 
+		void WhenMutable(TransformComponent& component) {
+			component.SetDirty();
+		}
+		void WhenMutable(void* component) {
+
+		}
+
 		// Non-serialized attributes:
 		float dt = 0;
 		enum FLAGS
