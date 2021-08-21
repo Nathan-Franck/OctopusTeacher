@@ -159,6 +159,21 @@ struct Octopus {
 			distanceTravelled += segments[boneIndex].length;
 			boneIndex++;
 		}
+
+		{
+			auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
+			const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
+			const TransformComponent* parentBone = componentFromEntity<TransformComponent>(parentEnt);
+			const XMVECTOR A{ 0, 0, 1 };
+			const auto daaa = parentBone->GetRotation();
+			const auto globalRotation = XMLoadFloat4(&daaa);
+			const auto inverseRotation = XMQuaternionInverse(globalRotation);
+			const XMVECTOR B = XMVector3Normalize(inverseRotation * XMLoadFloat3(&target));
+			const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(A, B));
+			const float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(A, B))); // don't use std::acos!
+			const XMVECTOR localRotationTowardsTarget = XMQuaternionNormalize(XMQuaternionRotationNormal(axis, angle));
+			XMStoreFloat4(&bone->rotation_local, localRotationTowardsTarget);
+		}
 	}
 
 	void Update(float time)
