@@ -12,6 +12,7 @@ struct Octopus {
 	std::vector<std::vector<Entity>> limbs;
 	Entity grabTarget;
 	Entity octopusScene;
+	Entity armature;
 
 	vector<vector<Entity>> FindLimbsFromScene()
 	{
@@ -32,8 +33,9 @@ struct Octopus {
 		auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
 		auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
 		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity.front());
-		auto armatureEntity = namesUnderOctopus | std::views::filter(isArmature);
-		auto namesUnderArmature = getEntitiesForParent<NameComponent>(armatureEntity.front());
+		auto armatureEntities = namesUnderOctopus | std::views::filter(isArmature);
+		armature = armatureEntities.front();
+		auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
 		auto armsEntities = namesUnderArmature | std::views::filter(isArm);
 		auto result = armsEntities
 			| std::views::transform([](Entity armEnt)
@@ -69,6 +71,10 @@ struct Octopus {
 		int limbIndex = 0;
 		for (auto limb : limbs)
 		{
+			//auto lastBoneEnt = limb[limb.size() - 1];
+			//GetScene().GetManager<InverseKinematicsComponent>()->Create(lastBoneEnt);
+			//GetScene().GetManager<InverseKinematicsComponent>()->Update(lastBoneEnt, { .target = grabTarget, .chain_length = (uint)(limb.size() - 1) });
+
 			auto bones = limb | std::views::transform(mutableComponentFromEntity<TransformComponent>);
 			int boneIndex = 0;
 			for (auto bone : bones)
@@ -99,7 +105,9 @@ struct Octopus {
 			for (auto bone : bones)
 			{
 				XMVECTOR quat{ 0, 0, 0, 1 };
-				auto x = XMQuaternionRotationRollPitchYaw(sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f, 0, 0);
+				
+				float angle = sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f;
+				auto x = XMQuaternionRotationNormal({ 1, 0, 0 }, angle);
 				quat = XMQuaternionMultiply(x, quat);
 				quat = XMQuaternionNormalize(quat);
 				XMStoreFloat4(&bone->rotation_local, quat);
@@ -115,70 +123,86 @@ struct Octopus {
 			float length;
 		};
 
-		auto bones = limbs[0];
-		int boneIndex = 0;
-		vector<Segment> segments;
-		for (auto bone : bones) {
-			if (boneIndex >= bones.size() - 1)
-			{
-				segments.push_back({ .01f });
-				break;
-			}
-			auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
-			auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
-			auto firstPosition = XMLoadFloat3(&first);
-			auto secondPosition = XMLoadFloat3(&second);
-			auto length = wiMath::Distance(firstPosition, secondPosition);
-			segments.push_back({ length });
-			boneIndex++;
-		}
 
-		boneIndex = 0;
-		float distanceTravelled = 0;
-		auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
-		auto start = componentFromEntity<TransformComponent>(limbs[0][0])->GetPosition();
-		float targetDistance = wiMath::Distance(
-			XMLoadFloat3(&target),
-			XMLoadFloat3(&start)
-		);
-		for (auto boneEnt : bones) {
-			auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
-			XMVECTOR quat{ 0, 0, 0, 1 };
-			XMVECTOR x;
-			if (distanceTravelled > targetDistance)
-			{
-				x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
-			}
-			else
-			{
-				x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
-			}
-			quat = XMQuaternionMultiply(x, quat);
-			quat = XMQuaternionNormalize(quat);
-			XMStoreFloat4(&bone->rotation_local, quat);
-			distanceTravelled += segments[boneIndex].length;
-			boneIndex++;
-		}
-
+		for (auto bones : limbs)
 		{
-			auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
-			const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
-			const TransformComponent* parentBone = componentFromEntity<TransformComponent>(parentEnt);
-			const XMVECTOR A{ 0, 0, 1 };
-			const auto daaa = parentBone->GetRotation();
-			const auto globalRotation = XMLoadFloat4(&daaa);
-			const auto inverseRotation = XMQuaternionInverse(globalRotation);
-			const XMVECTOR B = XMVector3Normalize(inverseRotation * XMLoadFloat3(&target));
-			const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(A, B));
-			const float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(A, B))); // don't use std::acos!
-			const XMVECTOR localRotationTowardsTarget = XMQuaternionNormalize(XMQuaternionRotationNormal(axis, angle));
-			XMStoreFloat4(&bone->rotation_local, localRotationTowardsTarget);
+			int boneIndex = 0;
+			vector<Segment> segments;
+			for (auto bone : bones)
+			{
+				if (boneIndex >= bones.size() - 1)
+				{
+					segments.push_back({ .01f });
+					break;
+				}
+				auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
+				auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
+				auto firstPosition = XMLoadFloat3(&first);
+				auto secondPosition = XMLoadFloat3(&second);
+				auto length = wiMath::Distance(firstPosition, secondPosition);
+				segments.push_back({ length });
+				boneIndex++;
+			}
+
+			boneIndex = 0;
+			float distanceTravelled = 0;
+			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
+			auto start = componentFromEntity<TransformComponent>(bones[0])->GetPosition();
+			auto relativeTarget =
+				XMLoadFloat3(&target) -
+				XMLoadFloat3(&start);
+			float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
+			for (auto boneEnt : bones) {
+				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+				XMVECTOR quat{ 0, 0, 0, 1 };
+				XMVECTOR x;
+				if (distanceTravelled > targetDistance)
+				{
+					x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
+				}
+				else
+				{
+					x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
+				}
+				quat = XMQuaternionMultiply(x, quat);
+				quat = XMQuaternionNormalize(quat);
+				XMStoreFloat4(&bone->rotation_local, quat);
+				distanceTravelled += segments[boneIndex].length;
+				boneIndex++;
+			}
+
+			{
+				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
+				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
+				TransformComponent* parentBone = mutableComponentFromEntity<TransformComponent>(parentEnt);
+				parentBone->SetDirty();
+				parentBone->UpdateTransform();
+				const auto globalRotation = parentBone->GetRotation();
+				const XMVECTOR inverseRotation = XMQuaternionInverse(XMLoadFloat4(&globalRotation));
+				const XMVECTOR localStartDirection{ 0, 1, 0 };
+				const XMVECTOR localUpDirection{ 0, 0, 1 };
+				const XMVECTOR localStartActual = XMVector3Normalize(localStartDirection - XMVector3Dot(localStartDirection, localUpDirection) * localStartDirection);
+				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector3Rotate(relativeTarget * XMVECTOR{ 1, 1, -1 }, inverseRotation));
+				const XMVECTOR localTargetActual = XMVector3Normalize(localTargetDirection - XMVector3Dot(localTargetDirection, localUpDirection) * localTargetDirection);
+				const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(localStartDirection, localTargetDirection));
+				const float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(localStartDirection, localTargetDirection)));
+				const XMVECTOR localRotationTowardsTarget = XMQuaternionRotationNormal(axis, angle);
+				XMStoreFloat4(&bone->rotation_local, localRotationTowardsTarget);
+
+				//std::stringstream ss;
+				//ss << "DATA:" << std::endl;
+				//ss << "{ " << XMVectorGetX(localStartActual) << ", " << XMVectorGetY(localStartActual) << ", " << XMVectorGetZ(localStartActual) << " }" << std::endl;
+				//ss << "{ " << XMVectorGetX(relativeTarget) << ", " << XMVectorGetY(relativeTarget) << ", " << XMVectorGetZ(relativeTarget) << " }" << std::endl;
+				//ss << "{ " << XMVectorGetX(localTargetActual) << ", " << XMVectorGetY(localTargetActual) << ", " << XMVectorGetZ(localTargetActual) << " }" << std::endl;
+				//ss << "{ " << XMVectorGetX(axis) << ", " << XMVectorGetY(axis) << ", " << XMVectorGetZ(axis) << " }" << std::endl;
+				//wiBackLog::post(ss.str().c_str());
+			}
 		}
 	}
 
 	void Update(float time)
 	{
-		SimpleDance(time);
+		//SimpleDance(time);
 		BasicGrasp();
 	}
 };

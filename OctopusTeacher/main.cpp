@@ -95,9 +95,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
-			auto transform = GetScene().transforms.GetComponent(testTarget);
+			auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
 			transform->translation_local = { 0, 0, 15 };
-			transform->SetDirty();
 			transform->UpdateTransform();
 
 			octopus = Octopus( testTarget, octopusScene );
