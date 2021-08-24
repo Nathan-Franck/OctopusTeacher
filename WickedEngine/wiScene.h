@@ -1318,8 +1318,8 @@ namespace wiScene
 		void WhenMutable(TransformComponent& component) {
 			component.SetDirty();
 		}
-		void WhenMutable(void* component) {
-
+		template<class T>
+		void WhenMutable(T component) {
 		}
 
 		// Non-serialized attributes:

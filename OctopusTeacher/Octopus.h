@@ -175,7 +175,6 @@ struct Octopus {
 				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
 				TransformComponent* parentBone = mutableComponentFromEntity<TransformComponent>(parentEnt);
-				parentBone->SetDirty();
 				parentBone->UpdateTransform();
 				const auto globalRotation = parentBone->GetRotation();
 				const XMVECTOR inverseRotation = XMQuaternionInverse(XMLoadFloat4(&globalRotation));
