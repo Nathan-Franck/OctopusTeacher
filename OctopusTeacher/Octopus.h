@@ -180,22 +180,11 @@ struct Octopus {
 				const auto globalRotation = parentBone->GetRotation();
 				const XMVECTOR inverseRotation = XMQuaternionInverse(XMLoadFloat4(&globalRotation));
 				const XMVECTOR localStartDirection{ 0, 1, 0 };
-				const XMVECTOR localUpDirection{ 0, 0, 1 };
-				const XMVECTOR localStartActual = XMVector3Normalize(localStartDirection - XMVector3Dot(localStartDirection, localUpDirection) * localStartDirection);
 				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector3Rotate(relativeTarget * XMVECTOR{ 1, 1, -1 }, inverseRotation));
-				const XMVECTOR localTargetActual = XMVector3Normalize(localTargetDirection - XMVector3Dot(localTargetDirection, localUpDirection) * localTargetDirection);
 				const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(localStartDirection, localTargetDirection));
 				const float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(localStartDirection, localTargetDirection)));
 				const XMVECTOR localRotationTowardsTarget = XMQuaternionRotationNormal(axis, angle);
 				XMStoreFloat4(&bone->rotation_local, localRotationTowardsTarget);
-
-				//std::stringstream ss;
-				//ss << "DATA:" << std::endl;
-				//ss << "{ " << XMVectorGetX(localStartActual) << ", " << XMVectorGetY(localStartActual) << ", " << XMVectorGetZ(localStartActual) << " }" << std::endl;
-				//ss << "{ " << XMVectorGetX(relativeTarget) << ", " << XMVectorGetY(relativeTarget) << ", " << XMVectorGetZ(relativeTarget) << " }" << std::endl;
-				//ss << "{ " << XMVectorGetX(localTargetActual) << ", " << XMVectorGetY(localTargetActual) << ", " << XMVectorGetZ(localTargetActual) << " }" << std::endl;
-				//ss << "{ " << XMVectorGetX(axis) << ", " << XMVectorGetY(axis) << ", " << XMVectorGetZ(axis) << " }" << std::endl;
-				//wiBackLog::post(ss.str().c_str());
 			}
 		}
 	}
