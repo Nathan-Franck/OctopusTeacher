@@ -1311,8 +1311,8 @@ namespace wiScene
 		};
 
 		template <typename T>
-		ComponentManager<T>* GetManager() {
-			return (ComponentManager<T>*)components[typeid(T)];
+		ComponentManager<T>& GetManager() {
+			return *(ComponentManager<T>*)components[typeid(T)];
 		}
 
 		void WhenMutable(TransformComponent& component) {

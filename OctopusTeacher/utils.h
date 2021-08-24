@@ -14,8 +14,8 @@ std::vector<Entity> getEntitiesForParent(Entity parent)
 		auto heirarchyComponent = GetScene().hierarchy[i];
 		auto entity = GetScene().hierarchy.GetEntity(i);
 		if (heirarchyComponent.parentID == parent) {
-			auto manager = GetScene().GetManager<T>();
-			auto component = manager->GetComponent(entity);
+			ComponentManager<T>& manager = GetScene().GetManager<T>();
+			auto component = manager.GetComponent(entity);
 			if (component != nullptr) {
 				entities.push_back(entity);
 			}
@@ -26,13 +26,13 @@ std::vector<Entity> getEntitiesForParent(Entity parent)
 
 template <class T>
 const T* componentFromEntity(Entity ent) {
-	return GetScene().GetManager<T>()->GetComponent(ent);
+	return GetScene().GetManager<T>().GetComponent(ent);
 }
 
 template <class T>
 T* mutableComponentFromEntity(Entity ent) {
-	auto component = GetScene().GetManager<T>()->GetComponent(ent);
-	GetScene().WhenMutable(component);
+	auto component = GetScene().GetManager<T>().GetComponent(ent);
+	GetScene().WhenMutable(*component);
 	return component;
 }
 
@@ -52,21 +52,21 @@ bool isAncestorOfEntity(Entity entity, Entity ancestor) {
 }
 
 Entity findOffspringWithName(Entity entity, string name) {
-	auto manager = GetScene().GetManager<NameComponent>();
-	for (int i = 0; i < manager->GetCount(); i++) {
-		auto ent = manager->GetEntity(i);
+	ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
+	for (int i = 0; i < manager.GetCount(); i++) {
+		auto ent = manager.GetEntity(i);
 		if (!isAncestorOfEntity(entity, ent)) { continue; }
-		auto nameComponent = (*manager)[i];
+		auto nameComponent = manager[i];
 		if (nameComponent.name.compare(name) == 0) { return ent;  }
 	}
 	return wiECS::INVALID_ENTITY;
 }
 
 Entity findWithName(string name) {
-	auto manager = GetScene().GetManager<NameComponent>();
-	for (int i = 0; i < manager->GetCount(); i++) {
-		auto nameComponent = (*manager)[i];
-		if (nameComponent.name.compare(name) == 0) { return manager->GetEntity(i); }
+	ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
+	for (int i = 0; i < manager.GetCount(); i++) {
+		auto nameComponent = manager[i];
+		if (nameComponent.name.compare(name) == 0) { return manager.GetEntity(i); }
 	}
 	return wiECS::INVALID_ENTITY;
 }
