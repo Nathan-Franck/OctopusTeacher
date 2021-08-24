@@ -20,7 +20,7 @@
 ![image](https://user-images.githubusercontent.com/6273324/130656113-66a68f39-882b-4d18-8804-36f24afb3e81.png)
 * Code necessary to aim tentale's root bone towards the target, from global to local-bone-space, works great --- except it's requiring using a magic value to reverse the z-axis? Something smells...
 
-![image](https://user-images.githubusercontent.com/6273324/130656395-373c8f10-0f65-4385-a769-97e2afe39f6a.png)
+![image](https://user-images.githubusercontent.com/6273324/130660353-75822f06-e806-43cf-b39b-5ee00bde4df2.png)
 * Single tentacle targetting point great! Easily generalize to all tentacles
 
 ![image](https://user-images.githubusercontent.com/6273324/130658093-4a0218f2-5001-47e1-bd0d-2ecd77db237d.png)
