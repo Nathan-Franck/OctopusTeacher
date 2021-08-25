@@ -71,83 +71,26 @@ Entity findWithName(string name) {
 	return INVALID_ENTITY;
 }
 
-
-class AncestryRange
-{
-	Entity entity;
-
-public:
-	AncestryRange(Entity entity) : entity(entity) {}
-
-	class Iterator
-	{
-		Entity entity;
-
-	public:
-		Iterator() : entity(INVALID_ENTITY) { }
-
-		Iterator(const Entity entity) : entity(entity) { }
-
-		Iterator& operator=(Entity entity)
-		{
-			this->entity = entity;
-			return *this;
-		}
-
-		Iterator& operator++()
-		{
-			auto hier = componentFromEntity<HierarchyComponent>(entity);
-			if (hier != nullptr)
-			{
-				entity = hier->parentID;
-			}
-			else
-			{
-				entity = INVALID_ENTITY;
-			}
-			return *this;
-		}
-
-		Iterator operator++(int)
-		{
-			Iterator iterator = *this;
-			++* this;
-			return iterator;
-		}
-
-		bool operator!=(const Iterator& iterator)
-		{
-			return entity != iterator.entity;
-		}
-
-		const Entity operator*()
-		{
-			return entity;
-		}
-	};
-
-	const Iterator begin()
-	{
-		return Iterator(entity);
-	}
-
-	const Iterator end()
-	{
-		return Iterator(INVALID_ENTITY);
-	}
-};
-
 auto getAncestryForEntity(Entity child)
 {
-	AncestryRange range{ child };
-	vector<Entity> result(range.begin(), range.end());
-	//return std::span(result.begin(), result.end());
-	return result;
+	vector<Entity> ancestry{};
+	Entity next = child;
+	while (next != INVALID_ENTITY) {
+		ancestry.push_back(next);
+		auto component = componentFromEntity<HierarchyComponent>(next);
+		if (component == nullptr) { break; }
+		next = component->parentID;
+	}
+	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-template<class T>
-auto matricesFromAncestry(T ancestry)
-{
-	doIt();
-	return ancestry | views::transform([](auto ent) { return componentFromEntity<TransformComponent>(ent); });
-}
+class MatrixAggregator {
+	XMMATRIX aggregateMatrix = XMMatrixIdentity();
+public:
+	const function<XMMATRIX(Entity)> Transform = [&](Entity entity) {
+		auto trans = componentFromEntity<TransformComponent>(entity);
+		XMMATRIX localMatrix = trans->GetLocalMatrix();
+		aggregateMatrix = XMMatrixMultiply(aggregateMatrix, localMatrix);
+		return aggregateMatrix;
+	};
+};

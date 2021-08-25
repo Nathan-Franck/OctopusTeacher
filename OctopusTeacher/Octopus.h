@@ -93,23 +93,6 @@ struct Octopus {
 			.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
 			.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f)
 			});
-
-		auto ancestry = getAncestryForEntity(limbs[0][0]);
-		auto what = ancestry | std::views::transform(mutableComponentFromEntity<TransformComponent>);
-		auto matrices = matricesFromAncestry(ancestry);
-		//std::stringstream ss;
-		//for (auto ent : ranges::take_view(range.begin(), range.end()) | views::filter([](auto thing) { return true;})) {
-		//	auto named = componentFromEntity<NameComponent>(ent);
-		//	if (named)
-		//	{
-		//		ss << "THEN... " << named->name << std::endl;
-		//	}
-		//	else
-		//	{
-		//		ss << ent << std::endl;
-		//	}
-		//}
-		//wiBackLog::post(ss.str().c_str());
 	}
 
 	void SimpleDance(float time)
@@ -164,10 +147,11 @@ struct Octopus {
 			boneIndex = 0;
 			float distanceTravelled = 0;
 			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
-			auto start = componentFromEntity<TransformComponent>(bones[0])->GetPosition();
-			auto relativeTarget =
-				XMLoadFloat3(&target) -
-				XMLoadFloat3(&start);
+			auto ancestry = getAncestryForEntity(bones[0]);
+			auto matrices = ancestry | views::transform(MatrixAggregator(ancestry).Transform);
+			XMVECTOR S, R, start;
+			XMMatrixDecompose(&S, &R, &start, matrices.back());
+			auto relativeTarget = XMLoadFloat3(&target) - start;
 			float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
 			for (auto boneEnt : bones) {
 				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
@@ -189,12 +173,18 @@ struct Octopus {
 			}
 
 			{
+				auto trans = mutableComponentFromEntity<TransformComponent>(armature);
+				trans->RotateRollPitchYaw(XMFLOAT3{ .001, 0, 0 });
+			}
+
+			{
 				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
-				TransformComponent* parentBone = mutableComponentFromEntity<TransformComponent>(parentEnt);
-				parentBone->UpdateTransform();
-				const auto globalRotation = parentBone->GetRotation();
-				const XMVECTOR inverseRotation = XMQuaternionInverse(XMLoadFloat4(&globalRotation));
+				auto ancestry = getAncestryForEntity(parentEnt);
+				auto matrices = ancestry | views::transform(MatrixAggregator(ancestry).Transform);
+				XMVECTOR S, globalRotation, T;
+				XMMatrixDecompose(&S, &globalRotation, &T, matrices.back());
+				const XMVECTOR inverseRotation = XMQuaternionInverse(globalRotation);
 				const XMVECTOR localStartDirection{ 0, 1, 0 };
 				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector3Rotate(relativeTarget * XMVECTOR{ 1, 1, -1 }, inverseRotation));
 				const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(localStartDirection, localTargetDirection));
