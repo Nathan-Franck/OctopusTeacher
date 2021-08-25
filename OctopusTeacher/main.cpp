@@ -65,8 +65,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	class Myrender : public RenderPath3D
 	{
 		Translator translator;
-		wiSprite sprite;
-		wiSpriteFont font;
+		//wiSprite sprite;
+		//wiSpriteFont font;
 		Entity teapot;
 		Octopus octopus;
 		std::vector<Entity> strobeLights;
@@ -77,17 +77,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
-			sprite = wiSprite("../Content/logo_small.png");
-			sprite.params.pos = { 100, 100, 0 };
-			sprite.params.siz = { 256, 256 };
-			sprite.anim.wobbleAnim.amount = { .2f, .2f };
-			AddSprite(&sprite);
+			//sprite = wiSprite("../Content/logo_small.png");
+			//sprite.params.pos = { 100, 100, 0 };
+			//sprite.params.siz = { 256, 256 };
+			//sprite.anim.wobbleAnim.amount = { .2f, .2f };
+			//AddSprite(&sprite);
 
-			font.SetText("Hello World!");
-			font.params.posX = 100;
-			font.params.posY = sprite.params.pos.y + sprite.params.siz.y;
-			font.params.size = 42;
-			AddFont(&font);
+			//font.SetText("Hello World!");
+			//font.params.posX = 100;
+			//font.params.posY = sprite.params.pos.y + sprite.params.siz.y;
+			//font.params.size = 42;
+			//AddFont(&font);
 
 			teapot = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
 			strobeLights = getEntitiesForParent<LightComponent>(teapot);

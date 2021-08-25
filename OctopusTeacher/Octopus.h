@@ -52,7 +52,7 @@ struct Octopus {
 					return bones;
 				})
 			| std::views::common;
-				return std::vector(result.begin(), result.end());
+		return std::vector(result.begin(), result.end());
 	}
 
 	Octopus() {
@@ -93,6 +93,23 @@ struct Octopus {
 			.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
 			.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f)
 			});
+
+		auto ancestry = getAncestryForEntity(limbs[0][0]);
+		auto what = ancestry | std::views::transform(mutableComponentFromEntity<TransformComponent>);
+		auto matrices = matricesFromAncestry(ancestry);
+		//std::stringstream ss;
+		//for (auto ent : ranges::take_view(range.begin(), range.end()) | views::filter([](auto thing) { return true;})) {
+		//	auto named = componentFromEntity<NameComponent>(ent);
+		//	if (named)
+		//	{
+		//		ss << "THEN... " << named->name << std::endl;
+		//	}
+		//	else
+		//	{
+		//		ss << ent << std::endl;
+		//	}
+		//}
+		//wiBackLog::post(ss.str().c_str());
 	}
 
 	void SimpleDance(float time)
@@ -190,7 +207,7 @@ struct Octopus {
 
 	void Update(float time)
 	{
-		//SimpleDance(time);
+		SimpleDance(time);
 		BasicGrasp();
 	}
 };
