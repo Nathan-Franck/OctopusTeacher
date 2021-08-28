@@ -124,8 +124,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			octopus.Update(time);
 
-			auto strobeLightsComponents = strobeLights | std::views::transform(mutableComponentFromEntity<LightComponent>);
-			for (auto component : strobeLightsComponents)
+			vector<LightComponent*> strobeLightComponents;
+			for (auto strobeLight : strobeLights) {
+				strobeLightComponents.push_back(mutableComponentFromEntity<LightComponent>(strobeLight));
+			}
+			for (auto component : strobeLightComponents)
 			{
 				component->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
 			}

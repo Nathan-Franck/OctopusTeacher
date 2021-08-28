@@ -1,6 +1,10 @@
 #pragma once
 
 #include <ranges>
+#include<tuple>
+#include<type_traits>
+#include<string>
+#include<iostream>
 
 using namespace std;
 using namespace wiECS;
@@ -84,13 +88,20 @@ auto getAncestryForEntity(Entity child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-class MatrixAggregator {
-	XMMATRIX aggregateMatrix = XMMatrixIdentity();
-public:
-	const function<XMMATRIX(Entity)> Transform = [&](Entity entity) {
-		auto trans = componentFromEntity<TransformComponent>(entity);
-		XMMATRIX localMatrix = trans->GetLocalMatrix();
-		aggregateMatrix = XMMatrixMultiply(aggregateMatrix, localMatrix);
-		return aggregateMatrix;
-	};
-};
+auto resolveMatrix(vector<Entity> ancestry)
+{
+	XMMATRIX result = XMMatrixIdentity();
+	for (auto ancestor : ancestry) {
+		auto transform = componentFromEntity<TransformComponent>(ancestor);
+		if (transform == nullptr) continue;
+		XMVECTOR S_local = XMLoadFloat3(&transform->scale_local);
+		XMVECTOR R_local = XMLoadFloat4(&transform->rotation_local);
+		XMVECTOR T_local = XMLoadFloat3(&transform->translation_local);
+		auto matrix =
+			XMMatrixScalingFromVector(S_local) *
+			XMMatrixRotationQuaternion(R_local) *
+			XMMatrixTranslationFromVector(T_local);
+		result = matrix * result;
+	}
+	return result;
+}

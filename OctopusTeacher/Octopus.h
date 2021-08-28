@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 using namespace wiECS;
@@ -16,43 +17,55 @@ struct Octopus {
 
 	vector<vector<Entity>> FindLimbsFromScene()
 	{
-		auto isOctopus = [](Entity entity)
+		auto getOctopus = [](vector<Entity> entities)
 		{
-			return componentFromEntity<NameComponent>(entity)->name.compare("OctopusRiggedTopo.glb") == 0;
+			for (auto entity : entities)
+				if (componentFromEntity<NameComponent>(entity)->name.compare("OctopusRiggedTopo.glb") == 0)
+					return entity;
 		};
-		auto isArmature = [](Entity entity)
+		auto getArmature = [](vector<Entity> entities)
 		{
-			return componentFromEntity<NameComponent>(entity)->name.compare("Armature") == 0;
+			for (auto entity : entities)
+				if (componentFromEntity<NameComponent>(entity)->name.compare("Armature") == 0)
+					return entity;
 		};
-		auto isArm = [](Entity entity)
+		auto getArms = [](vector<Entity> entities)
 		{
-			auto name = componentFromEntity<NameComponent>(entity)->name;
-			auto prefix = name.substr(0, 3);
-			return prefix.compare("Arm") == 0 && name.length() == 4;
+			vector<Entity> arms;
+			for (auto entity : entities)
+			{
+				auto name = componentFromEntity<NameComponent>(entity)->name;
+				auto prefix = name.substr(0, 3);
+				if (prefix.compare("Arm") == 0 && name.length() == 4)
+					arms.push_back(entity);
+			}
+			return arms;
+		};
+		auto getLimbs = [](vector<Entity> arms)
+		{
+			vector<vector<Entity>> limbs;
+			std::transform(arms.begin(), arms.end(), std::back_inserter(limbs), [](auto entity){
+				vector<Entity> bones;
+				Entity parent = entity;
+				while (true)
+				{
+					vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
+					if (childEntities.size() == 0) break;
+					Entity childEntity = childEntities.front();
+					bones.push_back(childEntity);
+					parent = childEntity;
+				}
+				return bones;
+			});
+			return limbs;
 		};
 		auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-		auto octopusEntity = namedEntsUnderOctopusScene | std::views::filter(isOctopus);
-		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity.front());
-		auto armatureEntities = namesUnderOctopus | std::views::filter(isArmature);
-		armature = armatureEntities.front();
+		auto octopusEntity = getOctopus(namedEntsUnderOctopusScene);
+		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity);
+		armature = getArmature(namesUnderOctopus);
 		auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
-		auto armsEntities = namesUnderArmature | std::views::filter(isArm);
-		auto result = armsEntities
-			| std::views::transform([](Entity armEnt)
-				{
-					std::vector<Entity> bones{ }; //armEnt
-					Entity parent = armEnt;
-					while (true) {
-						std::vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
-						if (childEntities.size() == 0) break;
-						Entity childEntity = childEntities.front();
-						bones.push_back(childEntity);
-						parent = childEntity;
-					}
-					return bones;
-				})
-			| std::views::common;
-		return std::vector(result.begin(), result.end());
+		auto armsEntities = getArms(namesUnderArmature);
+		return getLimbs(armsEntities);
 	}
 
 	Octopus() {
@@ -122,8 +135,6 @@ struct Octopus {
 		struct Segment {
 			float length;
 		};
-
-
 		for (auto bones : limbs)
 		{
 			int boneIndex = 0;
@@ -148,9 +159,9 @@ struct Octopus {
 			float distanceTravelled = 0;
 			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
 			auto ancestry = getAncestryForEntity(bones[0]);
-			auto matrices = ancestry | views::transform(MatrixAggregator(ancestry).Transform);
+			auto matrix = resolveMatrix(ancestry);
 			XMVECTOR S, R, start;
-			XMMatrixDecompose(&S, &R, &start, matrices.back());
+			XMMatrixDecompose(&S, &R, &start, matrix);
 			auto relativeTarget = XMLoadFloat3(&target) - start;
 			float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
 			for (auto boneEnt : bones) {
@@ -181,9 +192,9 @@ struct Octopus {
 				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
 				auto ancestry = getAncestryForEntity(parentEnt);
-				auto matrices = ancestry | views::transform(MatrixAggregator(ancestry).Transform);
+				auto matrix = resolveMatrix(ancestry);
 				XMVECTOR S, globalRotation, T;
-				XMMatrixDecompose(&S, &globalRotation, &T, matrices.back());
+				XMMatrixDecompose(&S, &globalRotation, &T, matrix);
 				const XMVECTOR inverseRotation = XMQuaternionInverse(globalRotation);
 				const XMVECTOR localStartDirection{ 0, 1, 0 };
 				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector3Rotate(relativeTarget * XMVECTOR{ 1, 1, -1 }, inverseRotation));
