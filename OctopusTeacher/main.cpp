@@ -73,10 +73,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
-			auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, 0, 15), true);
+			const auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, 0, 15), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
-			auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
+			const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
 			transform->translation_local = { 0, 0, 15 };
 			transform->UpdateTransform();
 
@@ -97,7 +97,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			translator.Update(*this);
 
-			auto trans = mutableComponentFromEntity<TransformComponent>(octopus.octopusScene);
+			const auto trans = mutableComponentFromEntity<TransformComponent>(octopus.octopusScene);
 			trans->RotateRollPitchYaw(XMFLOAT3{ .001, 0, 0 });
 			octopus.Update(time);
 

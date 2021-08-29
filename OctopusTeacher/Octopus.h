@@ -16,19 +16,19 @@ struct Octopus {
 
 	vector<vector<Entity>> FindLimbsFromScene(Entity octopusScene)
 	{
-		auto getOctopus = [](vector<Entity> entities)
+		const auto getOctopus = [](vector<Entity> entities)
 		{
 			for (auto entity : entities)
 				if (componentFromEntity<NameComponent>(entity)->name.compare("OctopusRiggedTopo.glb") == 0)
 					return entity;
 		};
-		auto getArmature = [](vector<Entity> entities)
+		const auto getArmature = [](vector<Entity> entities)
 		{
 			for (auto entity : entities)
 				if (componentFromEntity<NameComponent>(entity)->name.compare("Armature") == 0)
 					return entity;
 		};
-		auto getArms = [](vector<Entity> entities)
+		const auto getArms = [](vector<Entity> entities)
 		{
 			vector<Entity> arms;
 			for (auto entity : entities)
@@ -40,7 +40,7 @@ struct Octopus {
 			}
 			return arms;
 		};
-		auto getLimbs = [](vector<Entity> arms)
+		const auto getLimbs = [](vector<Entity> arms)
 		{
 			vector<vector<Entity>> limbs;
 			std::transform(arms.begin(), arms.end(), std::back_inserter(limbs), [](auto entity){
@@ -58,12 +58,12 @@ struct Octopus {
 			});
 			return limbs;
 		};
-		auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-		auto octopus = getOctopus(namedEntsUnderOctopusScene);
-		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
-		auto armature = getArmature(namesUnderOctopus);
-		auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
-		auto armsEntities = getArms(namesUnderArmature);
+		const auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
+		const auto octopus = getOctopus(namedEntsUnderOctopusScene);
+		const auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
+		const auto armature = getArmature(namesUnderOctopus);
+		const auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
+		const auto armsEntities = getArms(namesUnderArmature);
 		return getLimbs(armsEntities);
 	}
 
@@ -86,7 +86,7 @@ struct Octopus {
 			int boneIndex = 0;
 			for (auto boneEnt : limb)
 			{
-				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+				const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				bone->SetDirty();
 				auto scale = XMLoadFloat3(&bone->scale_local);
 				scale = XMVectorScale(scale, 1.0 / (boneIndex * 0.05f + 1));
@@ -111,11 +111,11 @@ struct Octopus {
 			int boneIndex = 0;
 			for (auto boneEnt : limb)
 			{
-				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+				const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				XMVECTOR quat{ 0, 0, 0, 1 };
 				
-				float angle = sin(time + limbIndex + boneIndex * 0.05f) * 0 * 3.14f / 180.0f;
-				auto x = XMQuaternionRotationNormal({ 1, 0, 0 }, angle);
+				const float angle = sin(time + limbIndex + boneIndex * 0.05f) * 0 * 3.14f / 180.0f;
+				const auto x = XMQuaternionRotationNormal({ 1, 0, 0 }, angle);
 				quat = XMQuaternionMultiply(x, quat);
 				quat = XMQuaternionNormalize(quat);
 				XMStoreFloat4(&bone->rotation_local, quat);
@@ -132,16 +132,16 @@ struct Octopus {
 			float length;
 		};
 
-		auto getRelativeTarget = [](Entity grabTarget, Entity bone) {
-			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
-			auto ancestry = getAncestryForEntity(bone);
-			auto matrix = localToGlobalMatrix(ancestry);
+		const auto getRelativeTarget = [](Entity grabTarget, Entity bone) {
+			const auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
+			const auto ancestry = getAncestryForEntity(bone);
+			const auto matrix = localToGlobalMatrix(ancestry);
 			XMVECTOR S, R, start;
 			XMMatrixDecompose(&S, &R, &start, matrix);
 			return XMVECTOR{ target.x, target.y, target.z, 1 } - start;
 		};
 
-		auto getSegments = [](vector<Entity> bones) {
+		const auto getSegments = [](vector<Entity> bones) {
 			int boneIndex = 0;
 			vector<Segment> segments;
 			for (auto bone : bones)
@@ -151,11 +151,11 @@ struct Octopus {
 					segments.push_back({ .01f });
 					break;
 				}
-				auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
-				auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
-				auto firstPosition = XMLoadFloat3(&first);
-				auto secondPosition = XMLoadFloat3(&second);
-				auto length = wiMath::Distance(firstPosition, secondPosition);
+				const auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
+				const auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
+				const auto firstPosition = XMLoadFloat3(&first);
+				const auto secondPosition = XMLoadFloat3(&second);
+				const auto length = wiMath::Distance(firstPosition, secondPosition);
 				segments.push_back({ length });
 				boneIndex++;
 			}
@@ -167,13 +167,13 @@ struct Octopus {
 			auto relativeTarget = getRelativeTarget(grabTarget, bones[0]);
 
 			{
-				auto segments = getSegments(bones);
-				float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
+				const auto segments = getSegments(bones);
+				const float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
 				float distanceTravelled = 0;
 				int boneIndex = 0;
 				for (auto boneEnt : bones)
 				{
-					auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+					const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 					XMVECTOR quat{ 0, 0, 0, 1 };
 					XMVECTOR x;
 					if (distanceTravelled > targetDistance)
@@ -194,8 +194,8 @@ struct Octopus {
 
 			{
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
-				auto ancestry = getAncestryForEntity(parentEnt);
-				auto localToGlobal = localToGlobalMatrix(ancestry);
+				const vector<Entity> ancestry = getAncestryForEntity(parentEnt);
+				const XMMATRIX localToGlobal = localToGlobalMatrix(ancestry);
 				const XMMATRIX globalToLocal = XMMatrixInverse(nullptr, localToGlobal);
 				const XMVECTOR localStartDirection{ 0, 1, 0 };
 				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector4Transform(relativeTarget, globalToLocal));
