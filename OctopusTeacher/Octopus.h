@@ -11,11 +11,10 @@ using namespace wiScene;
 struct Octopus {
 
 	std::vector<std::vector<Entity>> limbs;
-	Entity grabTarget;
 	Entity octopusScene;
-	Entity armature;
+	Entity grabTarget;
 
-	vector<vector<Entity>> FindLimbsFromScene()
+	vector<vector<Entity>> FindLimbsFromScene(Entity octopusScene)
 	{
 		auto getOctopus = [](vector<Entity> entities)
 		{
@@ -60,9 +59,9 @@ struct Octopus {
 			return limbs;
 		};
 		auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-		auto octopusEntity = getOctopus(namedEntsUnderOctopusScene);
-		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopusEntity);
-		armature = getArmature(namesUnderOctopus);
+		auto octopus = getOctopus(namedEntsUnderOctopusScene);
+		auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
+		auto armature = getArmature(namesUnderOctopus);
 		auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
 		auto armsEntities = getArms(namesUnderArmature);
 		return getLimbs(armsEntities);
@@ -75,23 +74,19 @@ struct Octopus {
 	Octopus(
 		Entity grabTarget,
 		Entity octopusScene
-	) {
+	): octopusScene(octopusScene) {
 		this->grabTarget = grabTarget;
-		this->octopusScene = octopusScene;
-		limbs = FindLimbsFromScene();
+		limbs = FindLimbsFromScene(octopusScene);
 
 		// Size limb bones down closer to the tips
 		int limbIndex = 0;
 		for (auto limb : limbs)
 		{
-			//auto lastBoneEnt = limb[limb.size() - 1];
-			//GetScene().GetManager<InverseKinematicsComponent>()->Create(lastBoneEnt);
-			//GetScene().GetManager<InverseKinematicsComponent>()->Update(lastBoneEnt, { .target = grabTarget, .chain_length = (uint)(limb.size() - 1) });
 
-			auto bones = limb | std::views::transform(mutableComponentFromEntity<TransformComponent>);
 			int boneIndex = 0;
-			for (auto bone : bones)
+			for (auto boneEnt : limb)
 			{
+				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				bone->SetDirty();
 				auto scale = XMLoadFloat3(&bone->scale_local);
 				scale = XMVectorScale(scale, 1.0 / (boneIndex * 0.05f + 1));
@@ -105,7 +100,7 @@ struct Octopus {
 		GetScene().materials.Update(findWithName("Material"), {
 			.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
 			.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f)
-			});
+		});
 	}
 
 	void SimpleDance(float time)
@@ -113,13 +108,13 @@ struct Octopus {
 		int limbIndex = 0;
 		for (auto limb : limbs)
 		{
-			auto bones = limb | std::views::transform(mutableComponentFromEntity<TransformComponent>);
 			int boneIndex = 0;
-			for (auto bone : bones)
+			for (auto boneEnt : limb)
 			{
+				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				XMVECTOR quat{ 0, 0, 0, 1 };
 				
-				float angle = sin(time + limbIndex + boneIndex * 0.05f) * 10 * 3.14f / 180.0f;
+				float angle = sin(time + limbIndex + boneIndex * 0.05f) * 0 * 3.14f / 180.0f;
 				auto x = XMQuaternionRotationNormal({ 1, 0, 0 }, angle);
 				quat = XMQuaternionMultiply(x, quat);
 				quat = XMQuaternionNormalize(quat);
@@ -135,8 +130,9 @@ struct Octopus {
 		struct Segment {
 			float length;
 		};
-		for (auto bones : limbs)
+		for (int limbIndex = 0; limbIndex < limbs.size(); limbIndex ++)
 		{
+			auto bones = limbs[limbIndex];
 			int boneIndex = 0;
 			vector<Segment> segments;
 			for (auto bone : bones)
@@ -159,12 +155,14 @@ struct Octopus {
 			float distanceTravelled = 0;
 			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
 			auto ancestry = getAncestryForEntity(bones[0]);
-			auto matrix = resolveMatrix(ancestry);
+			auto matrix = localToGlobalMatrix(ancestry);
 			XMVECTOR S, R, start;
 			XMMatrixDecompose(&S, &R, &start, matrix);
-			auto relativeTarget = XMLoadFloat3(&target) - start;
+			const TransformComponent* boneTransform = componentFromEntity<TransformComponent>(bones[0]);
+			auto relativeTarget = XMVECTOR{ target.x, target.y, target.z, 1 } - start;
 			float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
-			for (auto boneEnt : bones) {
+			for (auto boneEnt : bones)
+			{
 				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				XMVECTOR quat{ 0, 0, 0, 1 };
 				XMVECTOR x;
@@ -184,23 +182,16 @@ struct Octopus {
 			}
 
 			{
-				auto trans = mutableComponentFromEntity<TransformComponent>(armature);
-				trans->RotateRollPitchYaw(XMFLOAT3{ .001, 0, 0 });
-			}
-
-			{
-				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
 				auto ancestry = getAncestryForEntity(parentEnt);
-				auto matrix = resolveMatrix(ancestry);
-				XMVECTOR S, globalRotation, T;
-				XMMatrixDecompose(&S, &globalRotation, &T, matrix);
-				const XMVECTOR inverseRotation = XMQuaternionInverse(globalRotation);
+				auto localToGlobal = localToGlobalMatrix(ancestry);
+				const XMMATRIX globalToLocal = XMMatrixInverse(nullptr, localToGlobal);
 				const XMVECTOR localStartDirection{ 0, 1, 0 };
-				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector3Rotate(relativeTarget * XMVECTOR{ 1, 1, -1 }, inverseRotation));
+				const XMVECTOR localTargetDirection = XMVector3Normalize(XMVector4Transform(relativeTarget, globalToLocal));
 				const XMVECTOR axis = XMVector3Normalize(XMVector3Cross(localStartDirection, localTargetDirection));
 				const float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(localStartDirection, localTargetDirection)));
 				const XMVECTOR localRotationTowardsTarget = XMQuaternionRotationNormal(axis, angle);
+				auto bone = mutableComponentFromEntity<TransformComponent>(bones[0]);
 				XMStoreFloat4(&bone->rotation_local, localRotationTowardsTarget);
 			}
 		}

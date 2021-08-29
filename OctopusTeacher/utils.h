@@ -88,10 +88,11 @@ auto getAncestryForEntity(Entity child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-auto resolveMatrix(vector<Entity> ancestry)
+auto localToGlobalMatrix(vector<Entity> ancestry)
 {
 	XMMATRIX result = XMMatrixIdentity();
 	for (auto ancestor : ancestry) {
+		auto named = componentFromEntity<NameComponent>(ancestor);
 		auto transform = componentFromEntity<TransformComponent>(ancestor);
 		if (transform == nullptr) continue;
 		XMVECTOR S_local = XMLoadFloat3(&transform->scale_local);
@@ -104,4 +105,26 @@ auto resolveMatrix(vector<Entity> ancestry)
 		result = matrix * result;
 	}
 	return result;
+}
+
+// Can rely on assumption that hierarchy elements are sorted from ancestors <->decendance to call `UpdateTransform` on all transform components in the heirarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
+void bruteRecalculateAllMatrices()
+{
+	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
+		auto hierarchy = GetScene().hierarchy[i];
+		auto entity = GetScene().hierarchy.GetEntity(i);
+		auto transform = GetScene().transforms.GetComponent(entity);
+		auto parentTransform = GetScene().transforms.GetComponent(hierarchy.parentID);
+		if (transform == nullptr)
+		{
+			continue;
+		}
+		if (parentTransform == nullptr)
+		{
+			transform->SetDirty(true);
+			transform->UpdateTransform();
+			continue;
+		}
+		transform->UpdateTransform_Parented(*parentTransform);
+	}
 }

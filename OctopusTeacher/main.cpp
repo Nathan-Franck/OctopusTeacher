@@ -65,11 +65,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	class Myrender : public RenderPath3D
 	{
 		Translator translator;
-		//wiSprite sprite;
-		//wiSpriteFont font;
-		Entity teapot;
 		Octopus octopus;
-		std::vector<Entity> strobeLights;
 		Entity testTarget;
 		float time;
 	private:
@@ -77,22 +73,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Myrender()
 		{
-			//sprite = wiSprite("../Content/logo_small.png");
-			//sprite.params.pos = { 100, 100, 0 };
-			//sprite.params.siz = { 256, 256 };
-			//sprite.anim.wobbleAnim.amount = { .2f, .2f };
-			//AddSprite(&sprite);
-
-			//font.SetText("Hello World!");
-			//font.params.posX = 100;
-			//font.params.posY = sprite.params.pos.y + sprite.params.siz.y;
-			//font.params.size = 42;
-			//AddFont(&font);
-
-			teapot = LoadModel("../Content/models/teapot.wiscene", XMMatrixTranslation(0, 0, 10), true);
-			strobeLights = getEntitiesForParent<LightComponent>(teapot);
-
-			auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, -5, 15), true);
+			auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, 0, 15), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
 			auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
@@ -116,22 +97,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			translator.Update(*this);
 
-			auto transform = mutableComponentFromEntity<TransformComponent>(teapot);
-			if (transform != nullptr)
-			{
-				transform->RotateRollPitchYaw({ 0, 1.0f * dt, 0 });
-			}
-
+			auto trans = mutableComponentFromEntity<TransformComponent>(octopus.octopusScene);
+			trans->RotateRollPitchYaw(XMFLOAT3{ .001, 0, 0 });
 			octopus.Update(time);
-
-			vector<LightComponent*> strobeLightComponents;
-			for (auto strobeLight : strobeLights) {
-				strobeLightComponents.push_back(mutableComponentFromEntity<LightComponent>(strobeLight));
-			}
-			for (auto component : strobeLightComponents)
-			{
-				component->color = { cos(time * 10 * 3.14f) * 0.5f + 0.5f, 0, 0 };
-			}
 
 			RenderPath3D::Update(dt);
 		}
