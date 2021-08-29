@@ -127,12 +127,21 @@ struct Octopus {
 
 	void BasicGrasp()
 	{
+
 		struct Segment {
 			float length;
 		};
-		for (int limbIndex = 0; limbIndex < limbs.size(); limbIndex ++)
-		{
-			auto bones = limbs[limbIndex];
+
+		auto getRelativeTarget = [](Entity grabTarget, Entity bone) {
+			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
+			auto ancestry = getAncestryForEntity(bone);
+			auto matrix = localToGlobalMatrix(ancestry);
+			XMVECTOR S, R, start;
+			XMMatrixDecompose(&S, &R, &start, matrix);
+			return XMVECTOR{ target.x, target.y, target.z, 1 } - start;
+		};
+
+		auto getSegments = [](vector<Entity> bones) {
 			int boneIndex = 0;
 			vector<Segment> segments;
 			for (auto bone : bones)
@@ -150,35 +159,37 @@ struct Octopus {
 				segments.push_back({ length });
 				boneIndex++;
 			}
+			return segments;
+		};
 
-			boneIndex = 0;
-			float distanceTravelled = 0;
-			auto target = componentFromEntity<TransformComponent>(grabTarget)->GetPosition();
-			auto ancestry = getAncestryForEntity(bones[0]);
-			auto matrix = localToGlobalMatrix(ancestry);
-			XMVECTOR S, R, start;
-			XMMatrixDecompose(&S, &R, &start, matrix);
-			const TransformComponent* boneTransform = componentFromEntity<TransformComponent>(bones[0]);
-			auto relativeTarget = XMVECTOR{ target.x, target.y, target.z, 1 } - start;
-			float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
-			for (auto boneEnt : bones)
+		for (auto bones : limbs)
+		{
+			auto relativeTarget = getRelativeTarget(grabTarget, bones[0]);
+
 			{
-				auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
-				XMVECTOR quat{ 0, 0, 0, 1 };
-				XMVECTOR x;
-				if (distanceTravelled > targetDistance)
+				auto segments = getSegments(bones);
+				float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
+				float distanceTravelled = 0;
+				int boneIndex = 0;
+				for (auto boneEnt : bones)
 				{
-					x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
+					auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+					XMVECTOR quat{ 0, 0, 0, 1 };
+					XMVECTOR x;
+					if (distanceTravelled > targetDistance)
+					{
+						x = XMQuaternionRotationRollPitchYaw(60 * 3.14f / 180.0f, 0, 0);
+					}
+					else
+					{
+						x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
+					}
+					quat = XMQuaternionMultiply(x, quat);
+					quat = XMQuaternionNormalize(quat);
+					XMStoreFloat4(&bone->rotation_local, quat);
+					distanceTravelled += segments[boneIndex].length;
+					boneIndex++;
 				}
-				else
-				{
-					x = XMQuaternionRotationRollPitchYaw(0, 0, 0);
-				}
-				quat = XMQuaternionMultiply(x, quat);
-				quat = XMQuaternionNormalize(quat);
-				XMStoreFloat4(&bone->rotation_local, quat);
-				distanceTravelled += segments[boneIndex].length;
-				boneIndex++;
 			}
 
 			{
