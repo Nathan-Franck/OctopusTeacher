@@ -11,6 +11,11 @@
 * Make a cool little octopus demo
 
 ## Progress Milestones
+### 8/28/2021
+* Due to how models were imported, the main transform of the octopus model was being given a `local_scale.z` of -1, which aggrevated the quaterion math for deriving the orientation of the tentacle needed to reach the target. Now fixed using matrix math fully, works when octopus is in any orientation!
+
+![image](https://user-images.githubusercontent.com/6273324/131238935-c8d9c76f-a207-475b-b547-c7f78abf6093.png)
+
 ### 8/21/2021
 * Updated model with subsurface reference material, more tentacle bones, and a bit of webbing
 
