@@ -80,11 +80,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			transform->translation_local = { 0, 0, 15 };
 			transform->UpdateTransform();
 
-			octopus = Octopus( testTarget, octopusScene );
+			octopus = Octopus( octopusScene );
 
 			translator.Create();
 			translator.enabled = true;
-			translator.selected.push_back({ .entity = testTarget });
+			translator.selected.push_back({ .entity = octopusScene });
 		}
 		void Compose(wiGraphics::CommandList cmd) const override
 		{
@@ -97,8 +97,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			translator.Update(*this);
 
-			const auto trans = mutableComponentFromEntity<TransformComponent>(octopus.octopusScene);
-			trans->RotateRollPitchYaw(XMFLOAT3{ .001, 0, 0 });
 			octopus.Update(time);
 
 			RenderPath3D::Update(dt);

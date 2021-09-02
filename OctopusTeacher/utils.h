@@ -88,6 +88,19 @@ const auto getAncestryForEntity(Entity child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
+const auto getAncestryForParentChild(Entity parent, Entity child)
+{
+	vector<Entity> ancestry{};
+	Entity next = child;
+	while (next != INVALID_ENTITY && next != parent) {
+		ancestry.push_back(next);
+		const auto component = componentFromEntity<HierarchyComponent>(next);
+		if (component == nullptr) { break; }
+		next = component->parentID;
+	}
+	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
+}
+
 auto localToGlobalMatrix(vector<Entity> ancestry)
 {
 	XMMATRIX result = XMMatrixIdentity();
