@@ -11,6 +11,11 @@
 * Make a cool little octopus demo
 
 ## Progress Milestones
+### 9/2/2021
+* Setting initial targets for each tentacle, and moving octopus transform using translator...
+
+![OctopusDance](https://user-images.githubusercontent.com/6273324/131884013-0b89f210-dc43-449e-a43f-84bdf0b00f43.gif)
+
 ### 8/28/2021
 * Due to how models were imported, the main transform of the octopus model was being given a `local_scale.z` of -1, which aggrevated the quaternion math for deriving the orientation of the tentacle needed to reach the target. Now fixed using matrix math fully, works when octopus is in any orientation!
 
