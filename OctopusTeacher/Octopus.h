@@ -8,11 +8,15 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
+const static float strideLength = 2;
+const static float smoothSpeed = 16;
+
 struct Octopus {
 
 	vector<vector<Entity>> limbs;
 	vector<XMFLOAT3> relativeTargetGoals;
 	vector<XMFLOAT3> targets;
+	vector<XMFLOAT3> previousTargets;
 	vector<XMFLOAT3> smoothTargets;
 
 	Entity octopusScene;
@@ -114,6 +118,8 @@ struct Octopus {
 			XMFLOAT3 target;
 			XMStoreFloat3(&target, XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix));
 			targets.push_back(target);
+			previousTargets.push_back(target);
+			smoothTargets.push_back(target);
 		}
 
 		// Hard-coding octopus coloration for now
@@ -145,10 +151,67 @@ struct Octopus {
 		}
 	}
 
-	void Retargetting()
+	XMMATRIX previousOctopusMatrix;
+
+	void Retargetting(float dt)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
-		const auto octopusPosition = XMVector4Transform({ 0, 0, 0, 1 }, octopusMatrix);
+
+		vector<XMVECTOR> newTargets;
+		vector<XMVECTOR> targetDeltas;
+		vector<XMVECTOR> historyDeltas;
+		vector<float> dots;
+		for (int i = 0; i < limbs.size(); i++)
+		{
+			const auto limb = limbs[i];
+			const auto goal = relativeTargetGoals[i];
+			const Entity lastBone = limb[limb.size() - 1];
+			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopusScene, lastBone));
+			const auto newTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix);
+			const auto previousTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, previousOctopusMatrix);
+			const auto historyDelta = newTarget - previousTarget;
+			const auto targetDelta = newTarget - XMLoadFloat3(&targets[i]);
+			historyDeltas.push_back(historyDelta);
+			targetDeltas.push_back(targetDelta);
+			newTargets.push_back(newTarget);
+			dots.push_back(XMVectorGetX(XMVector3Dot(historyDelta, targetDelta))); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
+		}
+		for (int i = 0; i < limbs.size(); i++)
+		{
+			const auto neighborIndex = (1 - i % 2) + i / 2 * 2;
+			const auto dominant = i % 2 == 0;
+			const auto historyDistance = XMVectorGetX(XMVector3Length(historyDeltas[i]));
+			const auto targetDistance = XMVectorGetX(XMVector3Length(targetDeltas[i]));
+			if (dots[neighborIndex] >= 0
+				&& dots[i] > 0
+				&& (dots[i] > dots[neighborIndex] || dominant && abs(dots[i] - dots[neighborIndex]) < FLT_EPSILON)
+				&& targetDistance > FLT_EPSILON)
+			{
+				const auto lastTarget = XMLoadFloat3(&targets[i]);
+				const auto nextTarget = newTargets[i];
+				const auto usedDelta = historyDistance > FLT_EPSILON
+					? historyDeltas[i] / historyDistance
+					: targetDeltas[i] / targetDistance;
+				XMFLOAT3 result;
+				XMStoreFloat3(&result, nextTarget + usedDelta * strideLength);
+				previousTargets[i] = targets[i];
+				targets[i] = result;
+			}
+		}
+		for (int i = 0; i < limbs.size(); i++)
+		{
+			const auto smoothTarget = XMLoadFloat3(&smoothTargets[i]);
+			const auto target = XMLoadFloat3(&targets[i]);
+			const auto diff = target - smoothTarget;
+			const auto dist = XMVectorGetX(XMVector3Length(diff));
+			const auto vec = diff / (dist || 1.0f);
+			const auto speed = min(smoothSpeed * dt, dist);
+			XMFLOAT3 result;
+			XMStoreFloat3(&result, smoothTarget + vec * speed);
+			smoothTargets[i] = result;
+		}
+
+		previousOctopusMatrix = octopusMatrix;
 	}
 
 	void BasicGrasp()
@@ -188,7 +251,7 @@ struct Octopus {
 		int boneIndex = 0;
 		for (auto bones : limbs)
 		{
-			auto relativeTarget = getRelativeTarget(targets[boneIndex], bones[0]);
+			auto relativeTarget = getRelativeTarget(smoothTargets[boneIndex], bones[0]);
 
 			{
 				const auto segments = getSegments(bones);
@@ -223,8 +286,14 @@ struct Octopus {
 		}
 	}
 
+	float time;
+
 	void Update(float time)
 	{
+		float dt = time - this->time;
+		this->time = time;
+
+		Retargetting(dt);
 		BasicGrasp();
 	}
 };
