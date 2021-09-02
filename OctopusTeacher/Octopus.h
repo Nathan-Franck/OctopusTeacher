@@ -8,8 +8,8 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-const static float strideLength = 2;
-const static float smoothSpeed = 16;
+const static float strideLength = 4;
+const static float smoothSpeed = 1;
 
 struct Octopus {
 
@@ -17,7 +17,7 @@ struct Octopus {
 	vector<XMFLOAT3> relativeTargetGoals;
 	vector<XMFLOAT3> targets;
 	vector<XMFLOAT3> previousTargets;
-	vector<XMFLOAT3> smoothTargets;
+	vector<float> targetTimes;
 
 	Entity octopusScene;
 
@@ -119,7 +119,7 @@ struct Octopus {
 			XMStoreFloat3(&target, XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix));
 			targets.push_back(target);
 			previousTargets.push_back(target);
-			smoothTargets.push_back(target);
+			targetTimes.push_back(0);
 		}
 
 		// Hard-coding octopus coloration for now
@@ -153,7 +153,7 @@ struct Octopus {
 
 	XMMATRIX previousOctopusMatrix;
 
-	void Retargetting(float dt)
+	void Retargetting(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
@@ -196,25 +196,14 @@ struct Octopus {
 				XMStoreFloat3(&result, nextTarget + usedDelta * strideLength);
 				previousTargets[i] = targets[i];
 				targets[i] = result;
+				targetTimes[i] = time;
 			}
-		}
-		for (int i = 0; i < limbs.size(); i++)
-		{
-			const auto smoothTarget = XMLoadFloat3(&smoothTargets[i]);
-			const auto target = XMLoadFloat3(&targets[i]);
-			const auto diff = target - smoothTarget;
-			const auto dist = XMVectorGetX(XMVector3Length(diff));
-			const auto vec = diff / (dist || 1.0f);
-			const auto speed = min(smoothSpeed * dt, dist);
-			XMFLOAT3 result;
-			XMStoreFloat3(&result, smoothTarget + vec * speed);
-			smoothTargets[i] = result;
 		}
 
 		previousOctopusMatrix = octopusMatrix;
 	}
 
-	void BasicGrasp()
+	void BasicGrasp(float time)
 	{
 		struct Segment {
 			float length;
@@ -251,7 +240,12 @@ struct Octopus {
 		int boneIndex = 0;
 		for (auto bones : limbs)
 		{
-			auto relativeTarget = getRelativeTarget(smoothTargets[boneIndex], bones[0]);
+			XMFLOAT3 smoothTarget;
+			XMStoreFloat3(&smoothTarget, XMVectorLerp(
+				XMLoadFloat3(&previousTargets[boneIndex]),
+				XMLoadFloat3(&targets[boneIndex]),
+				clamp((time - targetTimes[boneIndex])* smoothSpeed, 0.0f, 1.0f)));
+			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
 
 			{
 				const auto segments = getSegments(bones);
@@ -286,14 +280,9 @@ struct Octopus {
 		}
 	}
 
-	float time;
-
 	void Update(float time)
 	{
-		float dt = time - this->time;
-		this->time = time;
-
-		Retargetting(dt);
-		BasicGrasp();
+		Retargetting(time);
+		BasicGrasp(time);
 	}
 };
