@@ -15,9 +15,14 @@ struct Octopus {
 
 	vector<vector<Entity>> limbs;
 	vector<XMFLOAT3> relativeTargetGoals;
-	vector<XMFLOAT3> targets;
-	vector<XMFLOAT3> previousTargets;
-	vector<float> targetTimes;
+	XMMATRIX previousOctopusMatrix;
+
+	struct Target {
+		XMFLOAT3 position;
+		float time;
+	};
+
+	vector<vector<Target>> targets;
 
 	Entity octopusScene;
 
@@ -117,9 +122,7 @@ struct Octopus {
 			relativeTargetGoals.push_back(goal);
 			XMFLOAT3 target;
 			XMStoreFloat3(&target, XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix));
-			targets.push_back(target);
-			previousTargets.push_back(target);
-			targetTimes.push_back(0);
+			targets.push_back({ { target, 0 } });
 		}
 
 		// Hard-coding octopus coloration for now
@@ -151,7 +154,6 @@ struct Octopus {
 		}
 	}
 
-	XMMATRIX previousOctopusMatrix;
 
 	void Retargetting(float time)
 	{
@@ -170,7 +172,7 @@ struct Octopus {
 			const auto newTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix);
 			const auto previousTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, previousOctopusMatrix);
 			const auto historyDelta = newTarget - previousTarget;
-			const auto targetDelta = newTarget - XMLoadFloat3(&targets[i]);
+			const auto targetDelta = newTarget - XMLoadFloat3(&targets[i][targets[i].size() - 1].position);
 			historyDeltas.push_back(historyDelta);
 			targetDeltas.push_back(targetDelta);
 			newTargets.push_back(newTarget);
@@ -187,16 +189,13 @@ struct Octopus {
 				&& (dots[i] > dots[neighborIndex] || dominant && abs(dots[i] - dots[neighborIndex]) < FLT_EPSILON)
 				&& targetDistance > FLT_EPSILON)
 			{
-				const auto lastTarget = XMLoadFloat3(&targets[i]);
 				const auto nextTarget = newTargets[i];
 				const auto usedDelta = historyDistance > FLT_EPSILON
 					? historyDeltas[i] / historyDistance
 					: targetDeltas[i] / targetDistance;
-				XMFLOAT3 result;
-				XMStoreFloat3(&result, nextTarget + usedDelta * strideLength);
-				previousTargets[i] = targets[i];
-				targets[i] = result;
-				targetTimes[i] = time;
+				XMFLOAT3 position;
+				XMStoreFloat3(&position, nextTarget + usedDelta * strideLength);
+				targets[i].push_back({ position, time });
 			}
 		}
 
@@ -240,11 +239,24 @@ struct Octopus {
 		int boneIndex = 0;
 		for (auto bones : limbs)
 		{
+			float totalWeight = 0;
+			vector<float> weights;
+			for (int targetIndex = targets[boneIndex].size() - 1; targetIndex >=0; targetIndex--)
+			{
+				const Target target = targets[boneIndex][targetIndex];
+				const float weight = clamp((time - target.time) * smoothSpeed, 0.0f, 1.0f) * (1 - totalWeight);
+				weights.push_back(weight);
+				if (weight >= 1) break;
+				totalWeight += weight;
+			}
+			XMVECTOR smoothed = { 0, 0, 0 };
+			for (int weightIndex = 0; weightIndex < weights.size(); weightIndex++)
+			{
+				int targetIndex = targets[boneIndex].size() - 1 - weightIndex;
+				smoothed += XMLoadFloat3(&targets[boneIndex][targetIndex].position) * weights[weightIndex];
+			}
 			XMFLOAT3 smoothTarget;
-			XMStoreFloat3(&smoothTarget, XMVectorLerp(
-				XMLoadFloat3(&previousTargets[boneIndex]),
-				XMLoadFloat3(&targets[boneIndex]),
-				clamp((time - targetTimes[boneIndex])* smoothSpeed, 0.0f, 1.0f)));
+			XMStoreFloat3(&smoothTarget, smoothed);
 			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
 
 			{
