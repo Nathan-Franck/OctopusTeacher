@@ -241,19 +241,25 @@ struct Octopus {
 		{
 			float totalWeight = 0;
 			vector<float> weights;
-			for (int targetIndex = targets[boneIndex].size() - 1; targetIndex >=0; targetIndex--)
+			int targetIndex = targets[boneIndex].size() - 1;
+			auto getProgress = [time](Target target) {
+				return (time - target.time) * smoothSpeed;
+			};
+			for (; targetIndex >= 0; targetIndex--)
 			{
 				const Target target = targets[boneIndex][targetIndex];
-				const float weight = clamp((time - target.time) * smoothSpeed, 0.0f, 1.0f) * (1 - totalWeight);
-				weights.push_back(weight);
-				if (weight >= 1) break;
-				totalWeight += weight;
+				if (getProgress(target) >= 1) break;
 			}
-			XMVECTOR smoothed = { 0, 0, 0 };
-			for (int weightIndex = 0; weightIndex < weights.size(); weightIndex++)
+			if (targetIndex > 0)
 			{
-				int targetIndex = targets[boneIndex].size() - 1 - weightIndex;
-				smoothed += XMLoadFloat3(&targets[boneIndex][targetIndex].position) * weights[weightIndex];
+				targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
+			}
+			XMVECTOR smoothed = XMLoadFloat3(&targets[boneIndex][0].position);
+			for (int i = 1; i < targets[boneIndex].size(); i++)
+			{
+				const auto target = targets[boneIndex][i];
+				const auto progress = getProgress(target);
+				smoothed = XMVectorLerp(smoothed, XMLoadFloat3(&target.position), clamp(progress, 0.0f, 1.0f));
 			}
 			XMFLOAT3 smoothTarget;
 			XMStoreFloat3(&smoothTarget, smoothed);
