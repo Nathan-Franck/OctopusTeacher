@@ -180,7 +180,7 @@ struct Octopus {
 		}
 		for (int i = 0; i < limbs.size(); i++)
 		{
-			const auto neighborIndex = (1 - i % 2) + i / 2 * 2;
+			const auto neighborIndex = (i + 1) % limbs.size();
 			const auto dominant = i % 2 == 0;
 			const auto historyDistance = XMVectorGetX(XMVector3Length(historyDeltas[i]));
 			const auto targetDistance = XMVectorGetX(XMVector3Length(targetDeltas[i]));
@@ -204,6 +204,8 @@ struct Octopus {
 
 	void BasicGrasp(float time)
 	{
+		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
+
 		struct Segment {
 			float length;
 		};
@@ -239,32 +241,39 @@ struct Octopus {
 		int boneIndex = 0;
 		for (auto bones : limbs)
 		{
-			float totalWeight = 0;
-			vector<float> weights;
-			int targetIndex = targets[boneIndex].size() - 1;
 			auto getProgress = [time](Target target) {
 				return (time - target.time) * smoothSpeed;
 			};
-			for (; targetIndex >= 0; targetIndex--)
+
+			// Cull old unused targets for limb
 			{
-				const Target target = targets[boneIndex][targetIndex];
-				if (getProgress(target) >= 1) break;
+				int targetIndex = targets[boneIndex].size() - 1;
+				for (; targetIndex >= 0; targetIndex--)
+				{
+					const Target target = targets[boneIndex][targetIndex];
+					if (getProgress(target) >= 1) break;
+				}
+				if (targetIndex > 0)
+				{
+					targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
+				}
 			}
-			if (targetIndex > 0)
-			{
-				targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
-			}
+
+			// Calculate smoothed version of targets for limb
 			XMVECTOR smoothed = XMLoadFloat3(&targets[boneIndex][0].position);
+			const auto octopusPosition = XMVector3Transform({ 0, 0, 0, 1 }, octopusMatrix);
 			for (int i = 1; i < targets[boneIndex].size(); i++)
 			{
 				const auto target = targets[boneIndex][i];
 				const auto progress = getProgress(target);
 				smoothed = XMVectorLerp(smoothed, XMLoadFloat3(&target.position), clamp(progress, 0.0f, 1.0f));
+				smoothed = XMVectorLerp(smoothed, octopusPosition, clamp(0.5f - abs(progress - 0.5f), 0.0f, 1.0f));
 			}
 			XMFLOAT3 smoothTarget;
 			XMStoreFloat3(&smoothTarget, smoothed);
 			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
 
+			// Curl tips of limbs to wrap target
 			{
 				const auto segments = getSegments(bones);
 				const float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
@@ -281,6 +290,7 @@ struct Octopus {
 				}
 			}
 
+			// Rotate base of limbs to targets
 			{
 				const Entity parentEnt = componentFromEntity<HierarchyComponent>(bones[0])->parentID;
 				const XMMATRIX localToGlobal = localToGlobalMatrix(getAncestryForEntity(parentEnt));
