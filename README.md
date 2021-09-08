@@ -11,6 +11,11 @@
 * Make a cool little octopus demo
 
 ## Progress Milestones
+### 9/7/2021
+* Adapting spider walking algorithm to work with tentacles, retargetting animations blend together so tentacles never appear too snappy
+
+![OctopusSteps](https://user-images.githubusercontent.com/6273324/132445068-8e4ca388-6259-4e5f-8a72-e550516af7dc.gif)
+
 ### 9/2/2021
 * Setting initial targets for each tentacle, and moving octopus transform using translator...
 
