@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils.h"
+#include "easing.h"
 #include <vector>
 #include <algorithm>
 
@@ -8,7 +9,7 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-const static float strideLength = 4;
+const static float strideLength = 2;
 const static float smoothSpeed = 1;
 
 struct Octopus {
@@ -265,12 +266,12 @@ struct Octopus {
 			for (int i = 1; i < targets[boneIndex].size(); i++)
 			{
 				const auto target = targets[boneIndex][i];
-				const auto progress = getProgress(target);
-				smoothed = XMVectorLerp(smoothed, XMLoadFloat3(&target.position), clamp(progress, 0.0f, 1.0f));
-				smoothed = XMVectorLerp(smoothed, octopusPosition, clamp(0.5f - abs(progress - 0.5f), 0.0f, 1.0f));
+				const auto progress = easeOutBack(getProgress(target));
+				smoothed = XMVectorLerp(smoothed, XMLoadFloat3(&target.position), progress); // Target influence
+				smoothed = XMVectorLerp(smoothed, octopusPosition + XMVECTOR{ 0, strideLength * .25f, 0}, easeOutCirc(1 - abs(progress - 0.5f) * 2) * .5f); // Pull-in influence
 			}
 			XMFLOAT3 smoothTarget;
-			XMStoreFloat3(&smoothTarget, smoothed);
+			XMStoreFloat3(&smoothTarget, smoothed);	 
 			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
 
 			// Curl tips of limbs to wrap target
