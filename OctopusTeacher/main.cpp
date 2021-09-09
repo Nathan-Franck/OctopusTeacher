@@ -67,7 +67,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Translator translator;
 		Octopus octopus;
 		Entity testTarget;
-		float time;
+		float time = 0.0f;
 	private:
 
 	public:
@@ -114,7 +114,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else {
 			mainComponent.Run(); // run the update - render loop (mandatory)
-
 		}
 	}
 

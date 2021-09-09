@@ -11,13 +11,13 @@ using namespace wiECS;
 using namespace wiScene;
 
 template<class T>
-const vector<Entity> getEntitiesForParent(Entity parent)
+vector<Entity> getEntitiesForParent(const Entity& parent)
 {
 	vector<Entity> entities;
 	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
-		const auto heirarchyComponent = GetScene().hierarchy[i];
+		const auto hierarchyComponent = GetScene().hierarchy[i];
 		const auto entity = GetScene().hierarchy.GetEntity(i);
-		if (heirarchyComponent.parentID == parent) {
+		if (hierarchyComponent.parentID == parent) {
 			const ComponentManager<T>& manager = GetScene().GetManager<T>();
 			const auto component = manager.GetComponent(entity);
 			if (component != nullptr) {
@@ -29,53 +29,52 @@ const vector<Entity> getEntitiesForParent(Entity parent)
 }
 
 template <class T>
-const T* componentFromEntity(Entity ent) {
+const T* componentFromEntity(const Entity& ent) {
 	return GetScene().GetManager<T>().GetComponent(ent);
 }
 
 template <class T>
-T* mutableComponentFromEntity(Entity ent) {
+T* mutableComponentFromEntity(const Entity& ent) {
 	auto component = GetScene().GetManager<T>().GetComponent(ent);
 	GetScene().WhenMutable(*component);
 	return component;
 }	
 
-bool isAncestorOfEntity(Entity entity, Entity ancestor) {
-	const auto heirarchyComponent = GetScene().hierarchy.GetComponent(ancestor);
-	if (heirarchyComponent == nullptr) { return false; }
-	auto parent = heirarchyComponent->parentID;
+bool isAncestorOfEntity(const Entity& potentialAncestor, const Entity& entity) {
+	auto hierarchyComponent = GetScene().hierarchy.GetComponent(entity);
+	if (hierarchyComponent == nullptr) { return false; }
+	auto parent = hierarchyComponent->parentID;
 	while (parent != INVALID_ENTITY)
 	{
-		if (entity == parent) { return true; }
-		ancestor = parent;
-		const auto heirarchyComponent = GetScene().hierarchy.GetComponent(ancestor);
-		if (heirarchyComponent == nullptr) { return false; }
-		parent = heirarchyComponent->parentID;
+		if (potentialAncestor == parent) { return true; }
+        hierarchyComponent = GetScene().hierarchy.GetComponent(parent);
+		if (hierarchyComponent == nullptr) { return false; }
+		parent = hierarchyComponent->parentID;
 	}
 	return false;
 }
 
-const Entity findOffspringWithName(Entity entity, string name) {
+[[maybe_unused]] Entity findOffspringWithName(const Entity& entity, const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
 	for (int i = 0; i < manager.GetCount(); i++) {
 		const auto ent = manager.GetEntity(i);
 		if (!isAncestorOfEntity(entity, ent)) { continue; }
 		const auto nameComponent = manager[i];
-		if (nameComponent.name.compare(name) == 0) { return ent;  }
+		if (nameComponent.name == name) { return ent;  }
 	}
 	return INVALID_ENTITY;
 }
 
-const Entity findWithName(string name) {
+Entity findWithName(const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
 	for (int i = 0; i < manager.GetCount(); i++) {
 		const auto nameComponent = manager[i];
-		if (nameComponent.name.compare(name) == 0) { return manager.GetEntity(i); }
+		if (nameComponent.name == name) { return manager.GetEntity(i); }
 	}
 	return INVALID_ENTITY;
 }
 
-const auto getAncestryForEntity(Entity child)
+auto getAncestryForEntity(const Entity& child)
 {
 	vector<Entity> ancestry{};
 	Entity next = child;
@@ -88,7 +87,7 @@ const auto getAncestryForEntity(Entity child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-const auto getAncestryForParentChild(Entity parent, Entity child)
+auto getAncestryForParentChild(const Entity& parent, const Entity& child)
 {
 	vector<Entity> ancestry{};
 	Entity next = child;
@@ -101,11 +100,10 @@ const auto getAncestryForParentChild(Entity parent, Entity child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-auto localToGlobalMatrix(vector<Entity> ancestry)
+auto localToGlobalMatrix(const vector<Entity>& ancestry)
 {
 	XMMATRIX result = XMMatrixIdentity();
 	for (auto ancestor : ancestry) {
-		const auto named = componentFromEntity<NameComponent>(ancestor);
 		const auto transform = componentFromEntity<TransformComponent>(ancestor);
 		if (transform == nullptr) continue;
 		const XMVECTOR S_local = XMLoadFloat3(&transform->scale_local);
@@ -121,7 +119,7 @@ auto localToGlobalMatrix(vector<Entity> ancestry)
 }
 
 // Can rely on assumption that hierarchy elements are sorted from ancestors <->decendance to call `UpdateTransform` on all transform components in the heirarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
-void bruteRecalculateAllMatrices()
+[[maybe_unused]] void bruteRecalculateAllMatrices()
 {
 	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
 		const auto hierarchy = GetScene().hierarchy[i];

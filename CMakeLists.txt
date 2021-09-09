@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Configure CMake global variables
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -23,12 +23,7 @@ endif()
 
 add_subdirectory(WickedEngine)
 
-option(WICKED_TESTS "Build WickedEngine tests" ON)
-if (WICKED_TESTS)
-	add_subdirectory(Tests)
-endif()
-
-option(WICKED_EDITOR "Build WickedEngine editor" ON)
-if (WICKED_EDITOR)
-	add_subdirectory(Editor)
+option(OctopusTeacher "Build OctopusTeacher" ON)
+if (OctopusTeacher)
+    add_subdirectory(OctopusTeacher)
 endif()

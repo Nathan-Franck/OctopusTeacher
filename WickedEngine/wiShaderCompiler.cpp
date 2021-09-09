@@ -502,7 +502,7 @@ namespace wiShaderCompiler
 			CompilerOutput* output = nullptr;
 			std::vector<std::vector<uint8_t>> filedatas;
 
-			HRESULT Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes) override
+			HRESULT STDMETHODCALLTYPE Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes) override
 			{
 				for (auto& x : input->include_directories)
 				{
@@ -521,7 +521,7 @@ namespace wiShaderCompiler
 				return E_FAIL;
 			}
 
-			HRESULT Close(LPCVOID pData) override
+			HRESULT STDMETHODCALLTYPE Close(LPCVOID pData) override
 			{
 				return S_OK;
 			}

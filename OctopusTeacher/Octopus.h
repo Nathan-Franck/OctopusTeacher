@@ -164,7 +164,7 @@ struct Octopus {
 		vector<XMVECTOR> targetDeltas;
 		vector<XMVECTOR> historyDeltas;
 		vector<float> dots;
-		for (int i = 0; i < limbs.size(); i++)
+		for (size_t i = 0; i < limbs.size(); i++)
 		{
 			const auto limb = limbs[i];
 			const auto goal = relativeTargetGoals[i];
@@ -179,7 +179,7 @@ struct Octopus {
 			newTargets.push_back(newTarget);
 			dots.push_back(XMVectorGetX(XMVector3Dot(historyDelta, targetDelta))); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
 		}
-		for (int i = 0; i < limbs.size(); i++)
+		for (size_t i = 0; i < limbs.size(); i++)
 		{
 			const auto neighborIndex = (i + 1) % limbs.size();
 			const auto dominant = i % 2 == 0;
