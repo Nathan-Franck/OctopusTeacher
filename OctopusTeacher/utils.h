@@ -118,7 +118,7 @@ auto localToGlobalMatrix(const vector<Entity>& ancestry)
 	return result;
 }
 
-// Can rely on assumption that hierarchy elements are sorted from ancestors <->decendance to call `UpdateTransform` on all transform components in the heirarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
+// Can rely on assumption that hierarchy elements are sorted from ancestors <-> dependence to call `UpdateTransform` on all transform components in the hierarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
 [[maybe_unused]] void bruteRecalculateAllMatrices()
 {
 	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
