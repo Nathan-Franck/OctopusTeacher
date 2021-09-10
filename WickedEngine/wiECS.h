@@ -71,7 +71,7 @@ namespace wiECS
 	public:
 
 		// reservedCount : how much components can be held initially before growing the container
-		ComponentManager(size_t reservedCount = 0)
+		explicit ComponentManager(size_t reservedCount = 0)
 		{
 			components.reserve(reservedCount);
 			entities.reserve(reservedCount);

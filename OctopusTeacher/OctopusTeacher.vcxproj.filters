@@ -37,6 +37,9 @@
     <ClInclude Include="easing.h">
       <Filter>Code</Filter>
     </ClInclude>
+    <ClInclude Include="static_vector.h">
+      <Filter>Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -1315,7 +1315,7 @@ namespace wiScene
 			return *(ComponentManager<T>*)components[typeid(T)];
 		}
 
-		void WhenMutable(TransformComponent& component) {
+		static void WhenMutable(TransformComponent& component) {
 			component.SetDirty();
 		}
 		template<class T>

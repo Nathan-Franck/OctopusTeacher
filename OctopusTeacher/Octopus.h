@@ -11,10 +11,68 @@ using namespace wiScene;
 
 const static float strideLength = 2;
 const static float smoothSpeed = 1;
+constexpr int LIMB_COUNT = 8;
+constexpr int LIMB_SEGMENTS = 8;
+
+static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity octopusScene)
+{
+    const auto getOctopus = [](const vector<Entity>& entities)
+    {
+        for (const auto entity : entities)
+            if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
+                return entity;
+		return INVALID_ENTITY;
+    };
+    const auto getArmature = [](const vector<Entity>& entities)
+    {
+        for (const auto entity : entities)
+            if (componentFromEntity<NameComponent>(entity)->name == "Armature")
+                return entity;
+		return INVALID_ENTITY;
+    };
+    const auto getArms = [](const vector<Entity>& entities)
+    {
+        vector<Entity> arms;
+        for (const auto entity : entities)
+        {
+            auto &name = componentFromEntity<NameComponent>(entity)->name;
+            auto prefix = name.substr(0, 3);
+            if (prefix == "Arm" && name.length() == 4)
+                arms.push_back(entity);
+        }
+        return arms;
+    };
+    const auto getLimbs = [](vector<Entity> arms)
+    {
+		array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> limbs;
+		transform(arms.begin(), arms.end(), limbs.begin(),
+			[](auto entity) {
+				array<Entity, LIMB_SEGMENTS> bones{};
+				Entity parent = entity;
+				for (size_t i = 0; i < LIMB_SEGMENTS; i++)
+				{
+					vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
+					if (childEntities.empty()) break;
+					Entity childEntity = childEntities.front();
+					bones[i] = childEntity;
+					parent = childEntity;
+				}
+				return bones;
+			});
+        return limbs;
+    };
+    const auto namedEntitiesUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
+    const auto octopus = getOctopus(namedEntitiesUnderOctopusScene);
+    const auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
+    const auto armature = getArmature(namesUnderOctopus);
+    const auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
+    const auto armsEntities = getArms(namesUnderArmature);
+    return getLimbs(armsEntities);
+}
 
 struct Octopus {
 
-	vector<vector<Entity>> limbs;
+	array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> limbs;
 	vector<XMFLOAT3> relativeTargetGoals;
 	XMMATRIX previousOctopusMatrix;
 
@@ -27,61 +85,6 @@ struct Octopus {
 
 	Entity octopusScene;
 
-	vector<vector<Entity>> FindLimbsFromScene(Entity octopusScene)
-	{
-		const auto getOctopus = [](vector<Entity> entities)
-		{
-			for (const auto entity : entities)
-				if (componentFromEntity<NameComponent>(entity)->name.compare("OctopusRiggedTopo.glb") == 0)
-					return entity;
-		};
-		const auto getArmature = [](vector<Entity> entities)
-		{
-			for (const auto entity : entities)
-				if (componentFromEntity<NameComponent>(entity)->name.compare("Armature") == 0)
-					return entity;
-		};
-		const auto getArms = [](vector<Entity> entities)
-		{
-			vector<Entity> arms;
-			for (const auto entity : entities)
-			{
-				auto name = componentFromEntity<NameComponent>(entity)->name;
-				auto prefix = name.substr(0, 3);
-				if (prefix.compare("Arm") == 0 && name.length() == 4)
-					arms.push_back(entity);
-			}
-			return arms;
-		};
-		const auto getLimbs = [](vector<Entity> arms)
-		{
-			vector<vector<Entity>> limbs;
-			transform(
-				arms.begin(), arms.end(), back_inserter(limbs),
-				[](auto entity) {
-					vector<Entity> bones;
-					Entity parent = entity;
-					while (true)
-					{
-						vector<Entity> childEntities = getEntitiesForParent<TransformComponent>(parent);
-						if (childEntities.size() == 0) break;
-						Entity childEntity = childEntities.front();
-						bones.push_back(childEntity);
-						parent = childEntity;
-					}
-					return bones;
-				});
-			return limbs;
-		};
-		const auto namedEntsUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-		const auto octopus = getOctopus(namedEntsUnderOctopusScene);
-		const auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
-		const auto armature = getArmature(namesUnderOctopus);
-		const auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
-		const auto armsEntities = getArms(namesUnderArmature);
-		return getLimbs(armsEntities);
-	}
-
 	Octopus() {
 
 	}
@@ -89,11 +92,12 @@ struct Octopus {
 	Octopus(
 		Entity octopusScene
 	): octopusScene(octopusScene) {
-		limbs = FindLimbsFromScene(octopusScene);
+		limbs = findLimbsFromScene(octopusScene);
+        previousOctopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
 		// Size limb bones down closer to the tips
 		int limbIndex = 0;
-		for (const auto limb : limbs)
+		for (const auto& limb : limbs)
 		{
 
 			int boneIndex = 0;
@@ -102,7 +106,7 @@ struct Octopus {
 				const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
 				bone->SetDirty();
 				auto scale = XMLoadFloat3(&bone->scale_local);
-				scale = XMVectorScale(scale, 1.0 / (boneIndex * 0.05f + 1));
+				scale = XMVectorScale(scale, 1.0f / ((float)boneIndex * 0.05f + 1));
 				XMStoreFloat3(&bone->scale_local, scale);
 				boneIndex++;
 			}
@@ -111,17 +115,17 @@ struct Octopus {
 
 		// Initialize targets to tips
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
-		for (const auto limb : limbs)
+		for (const auto& limb : limbs)
 		{
 			const Entity lastBone = limb[limb.size() - 1];
 			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopusScene, lastBone));
-			XMFLOAT3 goal;
+			XMFLOAT3 goal{};
 			XMStoreFloat3(&goal, XMVector4Transform({ 0, 0, 0, 1 }, matrix));
 			goal.x *= 0.75;
 			goal.y = -0.5;
 			goal.z *= 0.75;
 			relativeTargetGoals.push_back(goal);
-			XMFLOAT3 target;
+			XMFLOAT3 target{};
 			XMStoreFloat3(&target, XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix));
 			targets.push_back({ { target, 0 } });
 		}
@@ -131,12 +135,13 @@ struct Octopus {
 			.baseColor = XMFLOAT4(153 / 255.0f, 164 / 255.0f, 255 / 255.0f, 1.0f),
 			.subsurfaceScattering = XMFLOAT4(255 / 255.0f, 111 / 255.0f, 0 / 255.0f, 0.25f)
 			});
+
 	}
 
 	void SimpleDance(float time)
 	{
 		int limbIndex = 0;
-		for (const auto limb : limbs)
+		for (const auto& limb : limbs)
 		{
 			int boneIndex = 0;
 			for (const auto boneEnt : limb)
@@ -156,28 +161,28 @@ struct Octopus {
 	}
 
 
-	void Retargetting(float time)
+	void retargetting(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
-		vector<XMVECTOR> newTargets;
-		vector<XMVECTOR> targetDeltas;
-		vector<XMVECTOR> historyDeltas;
-		vector<float> dots;
+		array<XMVECTOR, LIMB_COUNT> newTargets{};
+		array<XMVECTOR, LIMB_COUNT> targetDeltas{};
+		array<XMVECTOR, LIMB_COUNT> historyDeltas{};
+		array<float, LIMB_COUNT> dots{};
 		for (size_t i = 0; i < limbs.size(); i++)
 		{
-			const auto limb = limbs[i];
-			const auto goal = relativeTargetGoals[i];
+			const auto &limb = limbs[i];
+			const auto &goal = relativeTargetGoals[i];
 			const Entity lastBone = limb[limb.size() - 1];
 			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopusScene, lastBone));
 			const auto newTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix);
 			const auto previousTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, previousOctopusMatrix);
 			const auto historyDelta = newTarget - previousTarget;
 			const auto targetDelta = newTarget - XMLoadFloat3(&targets[i][targets[i].size() - 1].position);
-			historyDeltas.push_back(historyDelta);
-			targetDeltas.push_back(targetDelta);
-			newTargets.push_back(newTarget);
-			dots.push_back(XMVectorGetX(XMVector3Dot(historyDelta, targetDelta))); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
+			historyDeltas[i] = historyDelta;
+			targetDeltas[i] = targetDelta;
+			newTargets[i] = newTarget;
+			dots[i] = XMVectorGetX(XMVector3Dot(historyDelta, targetDelta)); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
 		}
 		for (size_t i = 0; i < limbs.size(); i++)
 		{
@@ -190,11 +195,11 @@ struct Octopus {
 				&& (dots[i] > dots[neighborIndex] || dominant && abs(dots[i] - dots[neighborIndex]) < FLT_EPSILON)
 				&& targetDistance > FLT_EPSILON)
 			{
-				const auto nextTarget = newTargets[i];
+				const auto &nextTarget = newTargets[i];
 				const auto usedDelta = historyDistance > FLT_EPSILON
 					? historyDeltas[i] / historyDistance
 					: targetDeltas[i] / targetDistance;
-				XMFLOAT3 position;
+				XMFLOAT3 position{};
 				XMStoreFloat3(&position, nextTarget + usedDelta * strideLength);
 				targets[i].push_back({ position, time });
 			}
@@ -203,44 +208,61 @@ struct Octopus {
 		previousOctopusMatrix = octopusMatrix;
 	}
 
-	void BasicGrasp(float time)
+    struct Segment {
+        float length;
+    };
+
+    static auto getRelativeTarget(XMFLOAT3 target, Entity bone) {
+        const auto matrix = localToGlobalMatrix(getAncestryForEntity(bone));
+        XMVECTOR S, R, start;
+        XMMatrixDecompose(&S, &R, &start, matrix);
+        return XMVECTOR{ target.x, target.y, target.z, 1 } - start;
+    }
+
+    static auto getSegments(array<Entity, LIMB_SEGMENTS> bones) {
+        size_t boneIndex = 0;
+		array<Segment, LIMB_SEGMENTS> segments{};
+        for (size_t i = 0; i < bones.size(); i ++)
+        {
+			const auto& bone = bones[i];
+            if (boneIndex >= bones.size() - 1)
+            {
+                segments[i] = { .01f };
+                break;
+            }
+            const auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
+            const auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
+            const auto firstPosition = XMLoadFloat3(&first);
+            const auto secondPosition = XMLoadFloat3(&second);
+            const auto length = wiMath::Distance(firstPosition, secondPosition);
+			segments[i] = { length };
+            boneIndex++;
+        }
+        return segments;
+    }
+
+    static void curlTips(const array<Entity, LIMB_SEGMENTS>& bones, XMVECTOR relativeTarget) {
+        const auto segments = getSegments(bones);
+        const float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
+        float distanceTravelled = 0;
+        int boneIndex = 0;
+        for (const auto boneEnt : bones)
+        {
+            const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
+            const auto rotation = min(max(distanceTravelled - targetDistance, 0.f), 1.f);
+            XMVECTOR rotation_local = XMQuaternionRotationRollPitchYaw(rotation * 60 * 3.14f / 180.f, 0, 0);
+            XMStoreFloat4(&bone->rotation_local, rotation_local);
+            distanceTravelled += segments[boneIndex].length;
+            boneIndex++;
+        }
+    }
+
+    void BasicGrasp(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
-		struct Segment {
-			float length;
-		};
-
-		const auto getRelativeTarget = [](XMFLOAT3 target, Entity bone) {
-			const auto matrix = localToGlobalMatrix(getAncestryForEntity(bone));
-			XMVECTOR S, R, start;
-			XMMatrixDecompose(&S, &R, &start, matrix);
-			return XMVECTOR{ target.x, target.y, target.z, 1 } - start;
-		};
-
-		const auto getSegments = [](vector<Entity> bones) {
-			int boneIndex = 0;
-			vector<Segment> segments;
-			for (const auto bone : bones)
-			{
-				if (boneIndex >= bones.size() - 1)
-				{
-					segments.push_back({ .01f });
-					break;
-				}
-				const auto first = componentFromEntity<TransformComponent>(bone)->GetPosition();
-				const auto second = componentFromEntity<TransformComponent>(bones[boneIndex + 1])->GetPosition();
-				const auto firstPosition = XMLoadFloat3(&first);
-				const auto secondPosition = XMLoadFloat3(&second);
-				const auto length = wiMath::Distance(firstPosition, secondPosition);
-				segments.push_back({ length });
-				boneIndex++;
-			}
-			return segments;
-		};
-
 		int boneIndex = 0;
-		for (auto bones : limbs)
+		for (auto &bones : limbs)
 		{
 			auto getProgress = [time](Target target) {
 				return (time - target.time) * smoothSpeed;
@@ -248,15 +270,15 @@ struct Octopus {
 
 			// Cull old unused targets for limb
 			{
-				int targetIndex = targets[boneIndex].size() - 1;
-				for (; targetIndex >= 0; targetIndex--)
+				size_t targetIndex = targets[boneIndex].size() - 1;
+				for (; targetIndex > 0; targetIndex--)
 				{
 					const Target target = targets[boneIndex][targetIndex];
 					if (getProgress(target) >= 1) break;
 				}
 				if (targetIndex > 0)
 				{
-					targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
+						targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
 				}
 			}
 
@@ -265,31 +287,16 @@ struct Octopus {
 			const auto octopusPosition = XMVector3Transform({ 0, 0, 0, 1 }, octopusMatrix);
 			for (int i = 1; i < targets[boneIndex].size(); i++)
 			{
-				const auto target = targets[boneIndex][i];
+				const auto &target = targets[boneIndex][i];
 				const auto progress = easeOutBack(getProgress(target));
 				smoothed = XMVectorLerp(smoothed, XMLoadFloat3(&target.position), progress); // Target influence
 				smoothed = XMVectorLerp(smoothed, octopusPosition + XMVECTOR{ 0, strideLength * .25f, 0}, easeOutCirc(1 - abs(progress - 0.5f) * 2) * .5f); // Pull-in influence
 			}
-			XMFLOAT3 smoothTarget;
+			XMFLOAT3 smoothTarget{};
 			XMStoreFloat3(&smoothTarget, smoothed);	 
 			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
 
-			// Curl tips of limbs to wrap target
-			{
-				const auto segments = getSegments(bones);
-				const float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
-				float distanceTravelled = 0;
-				int boneIndex = 0;
-				for (const auto boneEnt : bones)
-				{
-					const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
-					const auto rotation = min(max(distanceTravelled - targetDistance, 0.f), 1.f);
-					XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation * 60 * 3.14f / 180.f, 0, 0);
-					XMStoreFloat4(&bone->rotation_local, quat);
-					distanceTravelled += segments[boneIndex].length; 
-					boneIndex++;
-				}
-			}
+            curlTips(bones, relativeTarget);
 
 			// Rotate base of limbs to targets
 			{
@@ -311,7 +318,7 @@ struct Octopus {
 
 	void Update(float time)
 	{
-		Retargetting(time);
+        retargetting(time);
 		BasicGrasp(time);
 	}
 };

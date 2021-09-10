@@ -14,7 +14,7 @@ template<class T>
 vector<Entity> getEntitiesForParent(const Entity& parent)
 {
 	vector<Entity> entities;
-	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
+	for (size_t i = 0; i < GetScene().hierarchy.GetCount(); i++) {
 		const auto hierarchyComponent = GetScene().hierarchy[i];
 		const auto entity = GetScene().hierarchy.GetEntity(i);
 		if (hierarchyComponent.parentID == parent) {
@@ -36,7 +36,7 @@ const T* componentFromEntity(const Entity& ent) {
 template <class T>
 T* mutableComponentFromEntity(const Entity& ent) {
 	auto component = GetScene().GetManager<T>().GetComponent(ent);
-	GetScene().WhenMutable(*component);
+	Scene::WhenMutable(*component);
 	return component;
 }	
 
@@ -56,7 +56,7 @@ bool isAncestorOfEntity(const Entity& potentialAncestor, const Entity& entity) {
 
 [[maybe_unused]] Entity findOffspringWithName(const Entity& entity, const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
-	for (int i = 0; i < manager.GetCount(); i++) {
+	for (size_t i = 0; i < manager.GetCount(); i++) {
 		const auto ent = manager.GetEntity(i);
 		if (!isAncestorOfEntity(entity, ent)) { continue; }
 		const auto nameComponent = manager[i];
@@ -67,7 +67,7 @@ bool isAncestorOfEntity(const Entity& potentialAncestor, const Entity& entity) {
 
 Entity findWithName(const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
-	for (int i = 0; i < manager.GetCount(); i++) {
+	for (size_t i = 0; i < manager.GetCount(); i++) {
 		const auto nameComponent = manager[i];
 		if (nameComponent.name == name) { return manager.GetEntity(i); }
 	}
@@ -121,7 +121,7 @@ auto localToGlobalMatrix(const vector<Entity>& ancestry)
 // Can rely on assumption that hierarchy elements are sorted from ancestors <-> dependence to call `UpdateTransform` on all transform components in the hierarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
 [[maybe_unused]] void bruteRecalculateAllMatrices()
 {
-	for (int i = 0; i < GetScene().hierarchy.GetCount(); i++) {
+	for (size_t i = 0; i < GetScene().hierarchy.GetCount(); i++) {
 		const auto hierarchy = GetScene().hierarchy[i];
 		const auto entity = GetScene().hierarchy.GetEntity(i);
 		const auto transform = GetScene().transforms.GetComponent(entity);

@@ -80,7 +80,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			transform->translation_local = { 0, 0, 15 };
 			transform->UpdateTransform();
 
-			octopus = Octopus( octopusScene );
+			octopus = Octopus(octopusScene );
 
 			translator.Create();
 			translator.enabled = true;
@@ -129,7 +129,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+	WNDCLASSEXW wcex{};
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 

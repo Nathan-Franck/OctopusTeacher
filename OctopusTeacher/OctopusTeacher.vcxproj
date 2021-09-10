@@ -89,7 +89,7 @@ xcopy "$(SolutionDir)WickedEngine\d3dcompiler_47.dll" "$(OutDir)" /c /y</Command
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)WickedEngine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)WickedEngine;$(SolutionDir)OctopusTeacher;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -110,6 +110,7 @@ xcopy "$(SolutionDir)WickedEngine\d3dcompiler_47.dll" "$(OutDir)" /c /y</Command
   <ItemGroup>
     <ClInclude Include="..\Editor\Translator.h" />
     <ClInclude Include="easing.h" />
+    <ClInclude Include="static_vector.h" />
     <ClInclude Include="Octopus.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
