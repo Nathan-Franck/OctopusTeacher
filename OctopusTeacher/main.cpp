@@ -62,7 +62,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainComponent.infoDisplay.fpsinfo = true;
 
 	using namespace wiScene;
-	class Myrender : public RenderPath3D
+	class Game : public RenderPath3D
 	{
 		Translator translator;
 		Octopus octopus;
@@ -71,7 +71,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	private:
 
 	public:
-		Myrender()
+		Game()
 		{
 			const auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, 0, 15), true);
 
@@ -103,8 +103,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 	};
 
-	Myrender render;
-	mainComponent.ActivatePath(&render);
+	Game* game = new Game();
+	mainComponent.ActivatePath(game);
 
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT) {
@@ -117,6 +117,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 	}
 
+	delete game;
     return (int) msg.wParam;
 }
 

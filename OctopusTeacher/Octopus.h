@@ -165,40 +165,47 @@ struct Octopus {
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
-		array<XMVECTOR, LIMB_COUNT> newTargets{};
-		array<XMVECTOR, LIMB_COUNT> targetDeltas{};
-		array<XMVECTOR, LIMB_COUNT> historyDeltas{};
-		array<float, LIMB_COUNT> dots{};
-		for (size_t i = 0; i < limbs.size(); i++)
+		struct Data {
+			XMVECTOR newTarget;
+			XMVECTOR targetDelta;
+			XMVECTOR historyDelta;
+			float targetHistoryDot;
+		};
+		array<Data, LIMB_COUNT> data{};
+		for (size_t i = 0; i < LIMB_COUNT; i++)
 		{
-			const auto &limb = limbs[i];
-			const auto &goal = relativeTargetGoals[i];
+			const auto& limb = limbs[i];
+			const auto& goal = relativeTargetGoals[i];
 			const Entity lastBone = limb[limb.size() - 1];
 			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopusScene, lastBone));
 			const auto newTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, octopusMatrix);
 			const auto previousTarget = XMVector4Transform({ goal.x, goal.y, goal.z, 1 }, previousOctopusMatrix);
 			const auto historyDelta = newTarget - previousTarget;
 			const auto targetDelta = newTarget - XMLoadFloat3(&targets[i][targets[i].size() - 1].position);
-			historyDeltas[i] = historyDelta;
-			targetDeltas[i] = targetDelta;
-			newTargets[i] = newTarget;
-			dots[i] = XMVectorGetX(XMVector3Dot(historyDelta, targetDelta)); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
+			const auto targetHistoryDot = XMVectorGetX(XMVector3Dot(historyDelta, targetDelta)); // If dot is positive, then we are on the end of a stride, if this number is negative we are at the start
+			data[i] = {
+				newTarget,
+				targetDelta,
+				historyDelta,
+				targetHistoryDot,
+			};
 		}
-		for (size_t i = 0; i < limbs.size(); i++)
+		for (size_t i = 0; i < LIMB_COUNT; i++)
 		{
-			const auto neighborIndex = (i + 1) % limbs.size();
+			const auto neighborIndex = (i + 1) % LIMB_COUNT;
 			const auto dominant = i % 2 == 0;
-			const auto historyDistance = XMVectorGetX(XMVector3Length(historyDeltas[i]));
-			const auto targetDistance = XMVectorGetX(XMVector3Length(targetDeltas[i]));
-			if (dots[neighborIndex] >= 0
-				&& dots[i] > 0
-				&& (dots[i] > dots[neighborIndex] || dominant && abs(dots[i] - dots[neighborIndex]) < FLT_EPSILON)
+			const auto historyDistance = XMVectorGetX(XMVector3Length(data[i].historyDelta));
+			const auto targetDistance = XMVectorGetX(XMVector3Length(data[i].targetDelta));
+			if (data[neighborIndex].targetHistoryDot >= 0
+				&& data[i].targetHistoryDot > 0
+				&& (data[i].targetHistoryDot > data[neighborIndex].targetHistoryDot
+					|| dominant && abs(data[i].targetHistoryDot - data[neighborIndex].targetHistoryDot) < FLT_EPSILON)
 				&& targetDistance > FLT_EPSILON)
 			{
-				const auto &nextTarget = newTargets[i];
+				const auto &nextTarget = data[i].newTarget;
 				const auto usedDelta = historyDistance > FLT_EPSILON
-					? historyDeltas[i] / historyDistance
-					: targetDeltas[i] / targetDistance;
+					? data[i].historyDelta / historyDistance
+					: data[i].targetDelta / targetDistance;
 				XMFLOAT3 position{};
 				XMStoreFloat3(&position, nextTarget + usedDelta * strideLength);
 				targets[i].push_back({ position, time });
