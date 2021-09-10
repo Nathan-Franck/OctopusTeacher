@@ -257,7 +257,7 @@ struct Octopus {
         }
     }
 
-    void BasicGrasp(float time)
+    void basicWalk(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
@@ -270,15 +270,13 @@ struct Octopus {
 
 			// Cull old unused targets for limb
 			{
-				size_t targetIndex = targets[boneIndex].size() - 1;
-				for (; targetIndex > 0; targetIndex--)
+				const auto result = find_if(targets[boneIndex].rbegin(), targets[boneIndex].rend(),
+					[getProgress](Target what) {
+						return getProgress(what) >= 1;
+					});
+				if (result != targets[boneIndex].rend() - 1)
 				{
-					const Target target = targets[boneIndex][targetIndex];
-					if (getProgress(target) >= 1) break;
-				}
-				if (targetIndex > 0)
-				{
-						targets[boneIndex].erase(targets[boneIndex].begin(), targets[boneIndex].begin() + targetIndex - 1);
+					targets[boneIndex].erase(targets[boneIndex].begin(), (result + 1).base());
 				}
 			}
 
@@ -319,6 +317,6 @@ struct Octopus {
 	void Update(float time)
 	{
         retargetting(time);
-		BasicGrasp(time);
+		basicWalk(time);
 	}
 };

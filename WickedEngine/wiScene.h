@@ -1281,7 +1281,7 @@ namespace wiScene
 		ComponentManager<InverseKinematicsComponent> inverse_kinematics;
 		ComponentManager<SpringComponent> springs;
 
-		std::map<std::type_index, void*> components {
+		std::unordered_map<std::type_index, void*> components {
 			{ typeid(NameComponent), (void*)&names },
 			{ typeid(LayerComponent), (void*)&layers },
 			{ typeid(TransformComponent), (void*)&transforms },
