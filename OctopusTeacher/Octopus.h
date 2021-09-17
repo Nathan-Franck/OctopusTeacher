@@ -175,7 +175,7 @@ struct OctopusBehaviour {
 					? data[i].historyDelta / historyDistance
 					: data[i].targetDelta / targetDistance;
 				const auto result = wiScene::Pick(
-					RAY(nextTarget + usedDelta * strideLength, { 0, -1, 0 }),
+					RAY(nextTarget + usedDelta * strideLength + XMVECTOR{ 0, 10, 0 }, { 0, -1, 0 }),
 					RENDERTYPE_OPAQUE,
 					1U << 32 - 1);
 				targets[i].push_back({ result.position, time });
@@ -248,8 +248,8 @@ struct OctopusBehaviour {
 			// Cull old unused targets for limb
 			{
 				const auto result = find_if(targets[boneIndex].rbegin(), targets[boneIndex].rend(),
-					[getProgress](Target what) {
-						return getProgress(what) >= 1;
+					[getProgress](Target target ) {
+						return getProgress(target) >= 1;
 					});
 				if (result != targets[boneIndex].rend() - 1)
 				{

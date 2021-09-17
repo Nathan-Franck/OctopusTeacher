@@ -61,68 +61,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainComponent.infoDisplay.resolution = true;
 	mainComponent.infoDisplay.fpsinfo = true;
 
-	using namespace wiScene;
-	class Game : public RenderPath3D
-	{
-		Translator translator;
-		OctopusBehaviour octopusBehaviour;
-		Entity testTarget;
-		float time = 0.0f;
-	private:
-
-	public:
-		Game()
-		{
-
-			{
-				TransformComponent transform;
-				XMStoreFloat4(&transform.rotation_local, XMQuaternionRotationRollPitchYaw(3.14 * .25, 0, 0));
-				XMStoreFloat3(&transform.translation_local, { 0, 10, 0 });
-				transform.UpdateTransform();
-				wiScene::GetCamera().TransformCamera(transform);
-			}
-
-			const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
-
-			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
-			const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
-			transform->translation_local = { 0, 0, 15 };
-			transform->UpdateTransform();
-
-			const auto getOctopus = [](const vector<Entity>& entities)
-			{
-				for (const auto entity : entities)
-					if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
-						return entity;
-				return INVALID_ENTITY;
-			};
-			const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
-			octopusBehaviour = OctopusBehaviour(octopusEntity);
-
-			translator.Create();
-			translator.enabled = true;
-			translator.selected.push_back({ .entity = octopusEntity });
-		}
-		void Compose(wiGraphics::CommandList cmd) const override
-		{
-			RenderPath3D::Compose(cmd);
-			translator.Draw(*camera, cmd);
-		}
-		void Update(float dt) override
-		{
-			time += dt;
-
-			translator.Update(*this);
-
-			octopusBehaviour.Update(time);
-
-			RenderPath3D::Update(dt);
-		}
-	};
-
-	Game* game = new Game();
-	mainComponent.ActivatePath(game);
-
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -134,7 +72,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 	}
 
-	delete game;
     return (int) msg.wParam;
 }
 
@@ -190,9 +127,71 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   using namespace wiScene;
+   class Game : public RenderPath3D
+   {
+	   Translator translator;
+	   OctopusBehaviour octopusBehaviour;
+	   Entity testTarget;
+	   float time = 0.0f;
+   private:
+
+   public:
+	   Game()
+	   {
+		   {
+			   TransformComponent transform;
+			   XMStoreFloat4(&transform.rotation_local, XMQuaternionRotationRollPitchYaw(3.14 * .25, 0, 0));
+			   XMStoreFloat3(&transform.translation_local, { 0, 10, 0 });
+			   transform.UpdateTransform();
+			   wiScene::GetCamera().TransformCamera(transform);
+		   }
+
+		   const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
+
+		   testTarget = GetScene().Entity_CreateObject("Tentacle Target");
+		   const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
+		   transform->translation_local = { 0, 0, 15 };
+		   transform->UpdateTransform();
+
+		   const auto getOctopus = [](const vector<Entity>& entities)
+		   {
+			   for (const auto entity : entities)
+				   if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
+					   return entity;
+			   return INVALID_ENTITY;
+		   };
+		   const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
+		   octopusBehaviour = OctopusBehaviour(octopusEntity);
+
+		   translator.Create();
+		   translator.enabled = true;
+		   translator.selected.push_back({ .entity = octopusEntity });
+	   }
+	   void Compose(wiGraphics::CommandList cmd) const override
+	   {
+		   RenderPath3D::Compose(cmd);
+		   translator.Draw(*camera, cmd);
+	   }
+	   void Update(float dt) override
+	   {
+		   time += dt;
+
+		   translator.Update(*this);
+
+		   octopusBehaviour.Update(time);
+
+		   RenderPath3D::Update(dt);
+	   }
+   };
+
+   Game* game = new Game();
+   mainComponent.ActivatePath(game);
 
    mainComponent.SetWindow(hWnd); // assign window handle (mandatory)
 
+   game->setAO(RenderPath3D::AO_SSAO);
+   game->setAOPower(10);
 
    return TRUE;
 }
