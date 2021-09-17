@@ -73,7 +73,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Game()
 		{
-			const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 5), true);
+			const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
 			const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);

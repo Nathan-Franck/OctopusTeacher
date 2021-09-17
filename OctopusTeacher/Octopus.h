@@ -9,7 +9,7 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-const static float strideLength = 2;
+const static float strideLength = 0.75;
 const static float smoothSpeed = 1;
 constexpr int LIMB_COUNT = 8;
 constexpr int LIMB_SEGMENTS = 8;
