@@ -73,6 +73,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Game()
 		{
+
+			{
+				TransformComponent transform;
+				XMStoreFloat4(&transform.rotation_local, XMQuaternionRotationRollPitchYaw(3.14 * .25, 0, 0));
+				XMStoreFloat3(&transform.translation_local, { 0, 10, 0 });
+				transform.UpdateTransform();
+				wiScene::GetCamera().TransformCamera(transform);
+			}
+
 			const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");

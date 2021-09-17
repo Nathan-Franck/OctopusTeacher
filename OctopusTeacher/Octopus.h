@@ -174,9 +174,11 @@ struct OctopusBehaviour {
 				const auto usedDelta = historyDistance > FLT_EPSILON
 					? data[i].historyDelta / historyDistance
 					: data[i].targetDelta / targetDistance;
-				XMFLOAT3 position{};
-				XMStoreFloat3(&position, nextTarget + usedDelta * strideLength);
-				targets[i].push_back({ position, time });
+				const auto result = wiScene::Pick(
+					RAY(nextTarget + usedDelta * strideLength, { 0, -1, 0 }),
+					RENDERTYPE_OPAQUE,
+					1U << 32 - 1);
+				targets[i].push_back({ result.position, time });
 			}
 		}
 
