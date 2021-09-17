@@ -14,15 +14,8 @@ const static float smoothSpeed = 1;
 constexpr int LIMB_COUNT = 8;
 constexpr int LIMB_SEGMENTS = 8;
 
-static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity octopusScene)
+static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity octopus)
 {
-    const auto getOctopus = [](const vector<Entity>& entities)
-    {
-        for (const auto entity : entities)
-            if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
-                return entity;
-		return INVALID_ENTITY;
-    };
     const auto getArmature = [](const vector<Entity>& entities)
     {
         for (const auto entity : entities)
@@ -61,8 +54,6 @@ static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity
 			});
         return limbs;
     };
-    const auto namedEntitiesUnderOctopusScene = getEntitiesForParent<NameComponent>(octopusScene);
-    const auto octopus = getOctopus(namedEntitiesUnderOctopusScene);
     const auto namesUnderOctopus = getEntitiesForParent<NameComponent>(octopus);
     const auto armature = getArmature(namesUnderOctopus);
     const auto namesUnderArmature = getEntitiesForParent<NameComponent>(armature);
@@ -70,7 +61,7 @@ static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity
     return getLimbs(armsEntities);
 }
 
-struct Octopus {
+struct OctopusBehaviour {
 
 	array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> limbs;
 	vector<XMFLOAT3> relativeTargetGoals;
@@ -85,15 +76,15 @@ struct Octopus {
 
 	Entity octopusScene;
 
-	Octopus() {
+	OctopusBehaviour() {
 
 	}
 
-	Octopus(
-		Entity octopusScene
-	): octopusScene(octopusScene) {
-		limbs = findLimbsFromScene(octopusScene);
-        previousOctopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
+	OctopusBehaviour(
+		Entity octopus
+	): octopusScene(octopus) {
+		limbs = findLimbsFromScene(octopus);
+        previousOctopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopus));
 
 		// Size limb bones down closer to the tips
 		int limbIndex = 0;
@@ -114,11 +105,11 @@ struct Octopus {
 		}
 
 		// Initialize targets to tips
-		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
+		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopus));
 		for (const auto& limb : limbs)
 		{
 			const Entity lastBone = limb[limb.size() - 1];
-			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopusScene, lastBone));
+			const auto matrix = localToGlobalMatrix(getAncestryForParentChild(octopus, lastBone));
 			XMFLOAT3 goal{};
 			XMStoreFloat3(&goal, XMVector4Transform({ 0, 0, 0, 1 }, matrix));
 			goal.x *= 0.75;
@@ -138,30 +129,7 @@ struct Octopus {
 
 	}
 
-	void SimpleDance(float time)
-	{
-		int limbIndex = 0;
-		for (const auto& limb : limbs)
-		{
-			int boneIndex = 0;
-			for (const auto boneEnt : limb)
-			{
-				const auto bone = mutableComponentFromEntity<TransformComponent>(boneEnt);
-				XMVECTOR quat{ 0, 0, 0, 1 };
-				
-				const float angle = sin(time + limbIndex + boneIndex * 0.05f) * 0 * 3.14f / 180.0f;
-				const auto x = XMQuaternionRotationNormal({ 1, 0, 0 }, angle);
-				quat = XMQuaternionMultiply(x, quat);
-				quat = XMQuaternionNormalize(quat);
-				XMStoreFloat4(&bone->rotation_local, quat);
-				boneIndex++;
-			}
-			limbIndex++;
-		}
-	}
-
-
-	void retargetting(float time)
+	void Retargetting(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
@@ -219,14 +187,14 @@ struct Octopus {
         float length;
     };
 
-    static auto getRelativeTarget(XMFLOAT3 target, Entity bone) {
+    static auto GetRelativeTarget(XMFLOAT3 target, Entity bone) {
         const auto matrix = localToGlobalMatrix(getAncestryForEntity(bone));
         XMVECTOR S, R, start;
         XMMatrixDecompose(&S, &R, &start, matrix);
         return XMVECTOR{ target.x, target.y, target.z, 1 } - start;
     }
 
-    static auto getSegments(array<Entity, LIMB_SEGMENTS> bones) {
+    static auto GetSegments(array<Entity, LIMB_SEGMENTS> bones) {
         size_t boneIndex = 0;
 		array<Segment, LIMB_SEGMENTS> segments{};
         for (size_t i = 0; i < bones.size(); i ++)
@@ -248,8 +216,8 @@ struct Octopus {
         return segments;
     }
 
-    static void curlTips(const array<Entity, LIMB_SEGMENTS>& bones, XMVECTOR relativeTarget) {
-        const auto segments = getSegments(bones);
+    static void CurlTips(const array<Entity, LIMB_SEGMENTS>& bones, XMVECTOR relativeTarget) {
+        const auto segments = GetSegments(bones);
         const float targetDistance = XMVectorGetX(XMVector3Length(relativeTarget));
         float distanceTravelled = 0;
         int boneIndex = 0;
@@ -264,7 +232,7 @@ struct Octopus {
         }
     }
 
-    void basicWalk(float time)
+    void BasicWalk(float time)
 	{
 		const auto octopusMatrix = localToGlobalMatrix(getAncestryForEntity(octopusScene));
 
@@ -299,9 +267,9 @@ struct Octopus {
 			}
 			XMFLOAT3 smoothTarget{};
 			XMStoreFloat3(&smoothTarget, smoothed);	 
-			auto relativeTarget = getRelativeTarget(smoothTarget, bones[0]);
+			auto relativeTarget = GetRelativeTarget(smoothTarget, bones[0]);
 
-            curlTips(bones, relativeTarget);
+            CurlTips(bones, relativeTarget);
 
 			// Rotate base of limbs to targets
 			{
@@ -323,7 +291,7 @@ struct Octopus {
 
 	void Update(float time)
 	{
-        retargetting(time);
-		basicWalk(time);
+        Retargetting(time);
+		BasicWalk(time);
 	}
 };

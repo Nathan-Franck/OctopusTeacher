@@ -65,7 +65,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	class Game : public RenderPath3D
 	{
 		Translator translator;
-		Octopus octopus;
+		OctopusBehaviour octopusBehaviour;
 		Entity testTarget;
 		float time = 0.0f;
 	private:
@@ -73,18 +73,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	public:
 		Game()
 		{
-			const auto octopusScene = LoadModel("../CustomContent/OctopusRiggedTopo.wiscene", XMMatrixTranslation(0, 0, 15), true);
+			const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 5), true);
 
 			testTarget = GetScene().Entity_CreateObject("Tentacle Target");
 			const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
 			transform->translation_local = { 0, 0, 15 };
 			transform->UpdateTransform();
 
-			octopus = Octopus(octopusScene );
+			const auto getOctopus = [](const vector<Entity>& entities)
+			{
+				for (const auto entity : entities)
+					if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
+						return entity;
+				return INVALID_ENTITY;
+			};
+			const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
+			octopusBehaviour = OctopusBehaviour(octopusEntity);
 
 			translator.Create();
 			translator.enabled = true;
-			translator.selected.push_back({ .entity = octopusScene });
+			translator.selected.push_back({ .entity = octopusEntity });
 		}
 		void Compose(wiGraphics::CommandList cmd) const override
 		{
@@ -97,7 +105,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			translator.Update(*this);
 
-			octopus.Update(time);
+			octopusBehaviour.Update(time);
 
 			RenderPath3D::Update(dt);
 		}
