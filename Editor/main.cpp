@@ -8,8 +8,6 @@
 #include "main.h"
 #include "Game.h"
 
-#define RUN_IN_EDITOR
-
 // Global Variables:
 constexpr auto MAX_LOADSTRING = 100;
 HINSTANCE hInst;                                // current instance
@@ -17,14 +15,8 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 Game* game;
-
-#ifdef RUN_IN_EDITOR
-#include "Editor.h"
-Editor mainComponent;
-#else
 RenderPath3D renderPath;
-MainComponent mainComponent;								// Wicked Engine Main Runtime Component
-#endif
+MainComponent mainComponent;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -68,6 +60,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainComponent.infoDisplay.watermark = true;
 	mainComponent.infoDisplay.resolution = true;
 	mainComponent.infoDisplay.fpsinfo = true;
+
+	game = new Game();
 
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT) {
@@ -136,11 +130,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
-   game = new Game();
    mainComponent.SetWindow(hWnd); // assign window handle (mandatory)
+   mainComponent.ActivatePath(&renderPath);
 
-   //game->setAO(RenderPath3D::AO_SSAO);
-   //game->setAOPower(10);
+   renderPath.setAO(RenderPath3D::AO_SSAO);
+   renderPath.setAOPower(10);
 
    return TRUE;
 }

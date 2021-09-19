@@ -14,8 +14,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Editor_SOURCE", "Editor\Edi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests", "Tests\Tests.vcxproj", "{3A9EA3D0-A795-46ED-A737-7164E90DC309}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OctopusTeacher", "OctopusTeacher\OctopusTeacher.vcxproj", "{76AA3D37-3252-4785-9334-3FC6B8CC07DE}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WickedEngine_SOURCE", "WickedEngine\WickedEngine_SOURCE.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WickedEngine_Windows", "WickedEngine\WickedEngine_Windows.vcxproj", "{06163DCB-B183-4ED9-9C62-13EF1658E049}"
@@ -49,6 +47,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Shaders_SOURCE", "WickedEngine\shaders\Shaders_SOURCE.vcxitems", "{92E86448-0724-4387-ABAC-96E63EDF4190}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Content", "Content\Content.vcxitems", "{C48F6BFF-F91B-4DB5-98B5-15287DFB7C95}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OctopusTeacher", "Editor\OctopusTeacher.vcxproj", "{76AA3D37-3252-4785-9334-3FC6B8CC07DE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -90,12 +90,6 @@ Global
 		{3A9EA3D0-A795-46ED-A737-7164E90DC309}.Release|x64.ActiveCfg = Release|x64
 		{3A9EA3D0-A795-46ED-A737-7164E90DC309}.Release|x64.Build.0 = Release|x64
 		{3A9EA3D0-A795-46ED-A737-7164E90DC309}.Release|x86.ActiveCfg = Release|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x64.ActiveCfg = Debug|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x64.Build.0 = Debug|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x86.ActiveCfg = Debug|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x64.ActiveCfg = Release|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x64.Build.0 = Release|x64
-		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x86.ActiveCfg = Release|x64
 		{06163DCB-B183-4ED9-9C62-13EF1658E049}.Debug|x64.ActiveCfg = Debug|x64
 		{06163DCB-B183-4ED9-9C62-13EF1658E049}.Debug|x64.Build.0 = Debug|x64
 		{06163DCB-B183-4ED9-9C62-13EF1658E049}.Debug|x86.ActiveCfg = Debug|x64
@@ -114,6 +108,12 @@ Global
 		{3B74A7FE-CED7-4723-8824-AC708A865B98}.Release|x64.ActiveCfg = Release|x64
 		{3B74A7FE-CED7-4723-8824-AC708A865B98}.Release|x64.Build.0 = Release|x64
 		{3B74A7FE-CED7-4723-8824-AC708A865B98}.Release|x86.ActiveCfg = Release|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x64.ActiveCfg = Debug|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x64.Build.0 = Debug|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Debug|x86.ActiveCfg = Debug|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x64.ActiveCfg = Release|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x64.Build.0 = Release|x64
+		{76AA3D37-3252-4785-9334-3FC6B8CC07DE}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

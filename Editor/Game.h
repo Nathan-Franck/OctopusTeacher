@@ -9,7 +9,7 @@
 class Game
 {
 	OctopusBehaviour octopusBehaviour;
-	Entity testTarget;
+	Entity testTarget; 
 	float time = 0.0f;
 private:
 

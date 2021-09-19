@@ -13,9 +13,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
-      <Filter>Code</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Code</Filter>
     </ClInclude>
@@ -38,6 +35,9 @@
       <Filter>Code</Filter>
     </ClInclude>
     <ClInclude Include="Game.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="resource_octopus.h">
       <Filter>Code</Filter>
     </ClInclude>
   </ItemGroup>

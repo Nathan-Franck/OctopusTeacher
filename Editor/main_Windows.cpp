@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "main_Windows.h"
 #include "Editor.h"
+#include "Game.h"
 
 #include <fstream>
 
@@ -11,6 +12,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 Editor editor;
+Game* game;
 
 enum Hotkeys
 {
@@ -52,6 +54,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WICKEDENGINEGAME));
 
+	game = new Game();
 
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
