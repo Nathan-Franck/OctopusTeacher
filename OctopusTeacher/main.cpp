@@ -1,22 +1,30 @@
 // OctopusTeacher.cpp : Defines the entry point for the application.
 //
 
-#include "stdafx.h"
-#include "main.h"
-#include "utils.h"
 #include <sstream>
 #include <string>
 #include <ranges>
-#include "../Editor/Translator.h"
-#include "Octopus.h"
+#include "stdafx.h"
+#include "main.h"
+#include "Game.h"
 
-#define MAX_LOADSTRING 100
+#define RUN_IN_EDITOR
 
 // Global Variables:
+constexpr auto MAX_LOADSTRING = 100;
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+Game* game;
+
+#ifdef RUN_IN_EDITOR
+#include "Editor.h"
+Editor mainComponent;
+#else
+RenderPath3D renderPath;
 MainComponent mainComponent;								// Wicked Engine Main Runtime Component
+#endif
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -69,6 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else {
 			mainComponent.Run(); // run the update - render loop (mandatory)
+			game->Update(mainComponent.GetDeltaTime());
 		}
 	}
 
@@ -127,71 +136,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
-   using namespace wiScene;
-   class Game : public RenderPath3D
-   {
-	   Translator translator;
-	   OctopusBehaviour octopusBehaviour;
-	   Entity testTarget;
-	   float time = 0.0f;
-   private:
-
-   public:
-	   Game()
-	   {
-		   {
-			   TransformComponent transform;
-			   XMStoreFloat4(&transform.rotation_local, XMQuaternionRotationRollPitchYaw(3.14 * .25, 0, 0));
-			   XMStoreFloat3(&transform.translation_local, { 0, 10, 0 });
-			   transform.UpdateTransform();
-			   wiScene::GetCamera().TransformCamera(transform);
-		   }
-
-		   const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
-
-		   testTarget = GetScene().Entity_CreateObject("Tentacle Target");
-		   const auto transform = mutableComponentFromEntity<TransformComponent>(testTarget);
-		   transform->translation_local = { 0, 0, 15 };
-		   transform->UpdateTransform();
-
-		   const auto getOctopus = [](const vector<Entity>& entities)
-		   {
-			   for (const auto entity : entities)
-				   if (componentFromEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
-					   return entity;
-			   return INVALID_ENTITY;
-		   };
-		   const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
-		   octopusBehaviour = OctopusBehaviour(octopusEntity);
-
-		   translator.Create();
-		   translator.enabled = true;
-		   translator.selected.push_back({ .entity = octopusEntity });
-	   }
-	   void Compose(wiGraphics::CommandList cmd) const override
-	   {
-		   RenderPath3D::Compose(cmd);
-		   translator.Draw(*camera, cmd);
-	   }
-	   void Update(float dt) override
-	   {
-		   time += dt;
-
-		   translator.Update(*this);
-
-		   octopusBehaviour.Update(time);
-
-		   RenderPath3D::Update(dt);
-	   }
-   };
-
-   Game* game = new Game();
-   mainComponent.ActivatePath(game);
-
+   game = new Game();
    mainComponent.SetWindow(hWnd); // assign window handle (mandatory)
 
-   game->setAO(RenderPath3D::AO_SSAO);
-   game->setAOPower(10);
+   //game->setAO(RenderPath3D::AO_SSAO);
+   //game->setAOPower(10);
 
    return TRUE;
 }

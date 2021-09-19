@@ -435,3 +435,8 @@ void MainComponent::SetWindow(wiPlatform::window_type window, bool fullscreen)
 	});
 }
 
+float MainComponent::GetDeltaTime()
+{
+	return deltaTime;
+}
+

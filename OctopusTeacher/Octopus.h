@@ -247,14 +247,15 @@ struct OctopusBehaviour {
 
 			// Cull old unused targets for limb
 			{
-				const auto result = find_if(targets[boneIndex].rbegin(), targets[boneIndex].rend(),
-					[getProgress](Target target ) {
-						return getProgress(target) >= 1;
-					});
-				if (result != targets[boneIndex].rend() - 1)
-				{
-					targets[boneIndex].erase(targets[boneIndex].begin(), (result + 1).base());
-				}
+				//const auto rend = targets[boneIndex].rend();
+				//const auto result = find_if(targets[boneIndex].rbegin(), rend,
+				//	[getProgress](Target target ) {
+				//		return getProgress(target) >= 1;
+				//	});
+				//if (result != rend - 1)
+				//{
+				//	targets[boneIndex].erase(targets[boneIndex].begin(), (result + 1).base());
+				//}
 			}
 
 			// Calculate smoothed version of targets for limb

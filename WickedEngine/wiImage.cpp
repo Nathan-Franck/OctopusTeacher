@@ -170,37 +170,40 @@ namespace wiImage
 			std::swap(cb.xCorners[2], cb.xCorners[3]);
 		}
 
-		const TextureDesc& desc = texture->GetDesc();
-		const float inv_width = 1.0f / float(desc.Width);
-		const float inv_height = 1.0f / float(desc.Height);
+		if (texture != nullptr)\
+		{
+			const TextureDesc& desc = texture->GetDesc();
+			const float inv_width = 1.0f / float(desc.Width);
+			const float inv_height = 1.0f / float(desc.Height);
 
-		if (params.isDrawRectEnabled())
-		{
-			cb.xTexMulAdd.x = params.drawRect.z * inv_width;	// drawRec.width: mul
-			cb.xTexMulAdd.y = params.drawRect.w * inv_height;	// drawRec.heigh: mul
-			cb.xTexMulAdd.z = params.drawRect.x * inv_width;	// drawRec.x: add
-			cb.xTexMulAdd.w = params.drawRect.y * inv_height;	// drawRec.y: add
-		}
-		else
-		{
-			cb.xTexMulAdd = XMFLOAT4(1, 1, 0, 0);	// disabled draw rect
-		}
-		cb.xTexMulAdd.z += params.texOffset.x * inv_width;	// texOffset.x: add
-		cb.xTexMulAdd.w += params.texOffset.y * inv_height;	// texOffset.y: add
+			if (params.isDrawRectEnabled())
+			{
+				cb.xTexMulAdd.x = params.drawRect.z * inv_width;	// drawRec.width: mul
+				cb.xTexMulAdd.y = params.drawRect.w * inv_height;	// drawRec.heigh: mul
+				cb.xTexMulAdd.z = params.drawRect.x * inv_width;	// drawRec.x: add
+				cb.xTexMulAdd.w = params.drawRect.y * inv_height;	// drawRec.y: add
+			}
+			else
+			{
+				cb.xTexMulAdd = XMFLOAT4(1, 1, 0, 0);	// disabled draw rect
+			}
+			cb.xTexMulAdd.z += params.texOffset.x * inv_width;	// texOffset.x: add
+			cb.xTexMulAdd.w += params.texOffset.y * inv_height;	// texOffset.y: add
 
-		if (params.isDrawRect2Enabled())
-		{
-			cb.xTexMulAdd2.x = params.drawRect2.z * inv_width;	// drawRec.width: mul
-			cb.xTexMulAdd2.y = params.drawRect2.w * inv_height;	// drawRec.heigh: mul
-			cb.xTexMulAdd2.z = params.drawRect2.x * inv_width;	// drawRec.x: add
-			cb.xTexMulAdd2.w = params.drawRect2.y * inv_height;	// drawRec.y: add
+			if (params.isDrawRect2Enabled())
+			{
+				cb.xTexMulAdd2.x = params.drawRect2.z * inv_width;	// drawRec.width: mul
+				cb.xTexMulAdd2.y = params.drawRect2.w * inv_height;	// drawRec.heigh: mul
+				cb.xTexMulAdd2.z = params.drawRect2.x * inv_width;	// drawRec.x: add
+				cb.xTexMulAdd2.w = params.drawRect2.y * inv_height;	// drawRec.y: add
+			}
+			else
+			{
+				cb.xTexMulAdd2 = XMFLOAT4(1, 1, 0, 0);	// disabled draw rect
+			}
+			cb.xTexMulAdd2.z += params.texOffset2.x * inv_width;	// texOffset.x: add
+			cb.xTexMulAdd2.w += params.texOffset2.y * inv_height;	// texOffset.y: add
 		}
-		else
-		{
-			cb.xTexMulAdd2 = XMFLOAT4(1, 1, 0, 0);	// disabled draw rect
-		}
-		cb.xTexMulAdd2.z += params.texOffset2.x * inv_width;	// texOffset.x: add
-		cb.xTexMulAdd2.w += params.texOffset2.y * inv_height;	// texOffset.y: add
 
 		device->UpdateBuffer(&constantBuffer, &cb, cmd);
 

@@ -73,6 +73,7 @@ public:
 	// You need to call this before calling Run() or Initialize() if you want to render
 	void SetWindow(wiPlatform::window_type, bool fullscreen = false);
 
+	float GetDeltaTime();
 
 	struct InfoDisplayer
 	{

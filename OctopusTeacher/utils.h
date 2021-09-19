@@ -1,10 +1,10 @@
 #pragma once
 
 #include <ranges>
-#include<tuple>
-#include<type_traits>
-#include<string>
-#include<iostream>
+#include <tuple>
+#include <type_traits>
+#include <string>
+#include <iostream>
 
 using namespace std;
 using namespace wiECS;
