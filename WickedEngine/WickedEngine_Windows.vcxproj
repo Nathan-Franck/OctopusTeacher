@@ -16,13 +16,17 @@
     <ClInclude Include="..\OctopusTeacher\Game.h" />
     <ClInclude Include="..\OctopusTeacher\OctopusComponent.h" />
     <ClInclude Include="..\OctopusTeacher\ParticleLocomotion.h" />
-    <ClInclude Include="..\OctopusTeacher\utils.h" />
+    <ClInclude Include="..\OctopusTeacher\Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Editor\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\OctopusTeacher\Game.cpp" />
+    <ClCompile Include="..\OctopusTeacher\OctopusComponent.cpp" />
+    <ClCompile Include="..\OctopusTeacher\ParticleLocomotion.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{06163DCB-B183-4ED9-9C62-13EF1658E049}</ProjectGuid>
@@ -69,8 +73,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -98,7 +101,7 @@
     </ProjectReference>
     <Lib>
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)BUILD\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
       <Command>IF NOT EXIST "$(ProjectDir)shaders\" mkdir "$(ProjectDir)shaders\"</Command>

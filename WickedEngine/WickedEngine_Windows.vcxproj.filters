@@ -5,10 +5,14 @@
     <ClInclude Include="..\OctopusTeacher\Game.h" />
     <ClInclude Include="..\OctopusTeacher\OctopusComponent.h" />
     <ClInclude Include="..\OctopusTeacher\ParticleLocomotion.h" />
-    <ClInclude Include="..\OctopusTeacher\utils.h" />
+    <ClInclude Include="..\OctopusTeacher\Utils.h" />
     <ClInclude Include="..\Editor\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Editor\stdafx.cpp" />
+    <ClCompile Include="..\OctopusTeacher\ParticleLocomotion.cpp" />
+    <ClCompile Include="..\OctopusTeacher\OctopusComponent.cpp" />
+    <ClCompile Include="..\OctopusTeacher\Game.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
 </Project>
