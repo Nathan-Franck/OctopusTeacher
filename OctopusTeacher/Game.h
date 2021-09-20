@@ -10,7 +10,7 @@
 class Game
 {
 	OctopusComponent octopusComponent;
-	ParticleLocomotion particle { .radius = 10, .position = { 0, 0, 5, 1 } };
+	ParticleLocomotion particle { .radius = 0.01f, .position = { 0, 0, 5, 1 } };
 	Entity testTarget; 
 	float time = 0.0f;
 private:
