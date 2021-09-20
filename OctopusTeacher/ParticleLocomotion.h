@@ -15,7 +15,7 @@ public:
 			const auto pickResult = wiScene::Pick(
 				RAY(position, direction),
 				RENDERTYPE_OPAQUE,
-				1U << 32 - 1);
+				1U << 0);
 			const auto length = XMVectorGetX(XMVector3Length(direction));
 			if (pickResult.distance > length + radius) {
 				XMStoreFloat3(&result, position + direction);

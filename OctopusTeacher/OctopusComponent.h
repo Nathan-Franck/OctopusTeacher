@@ -177,7 +177,7 @@ struct OctopusComponent {
 				const auto result = wiScene::Pick(
 					RAY(nextTarget + usedDelta * strideLength + XMVECTOR{ 0, 10, 0 }, { 0, -1, 0 }),
 					RENDERTYPE_OPAQUE,
-					1U << 32 - 1);
+					1U << 0);
 				targets[i].push_back({ result.position, time });
 			}
 		}
