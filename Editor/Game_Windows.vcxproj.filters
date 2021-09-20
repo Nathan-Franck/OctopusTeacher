@@ -19,25 +19,16 @@
     <ClInclude Include="targetver.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="main.h">
-      <Filter>Code</Filter>
-    </ClInclude>
     <ClInclude Include="utils.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Octopus.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="easing.h">
       <Filter>Code</Filter>
     </ClInclude>
     <ClInclude Include="static_vector.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="resource_octopus.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="resource_octopus.h">
+    <ClInclude Include="main.h">
       <Filter>Code</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,7 +41,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OctopusTeacher.rc">
+    <ResourceCompile Include="Game_Windows.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

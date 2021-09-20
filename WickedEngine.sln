@@ -48,7 +48,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Shaders_SOURCE", "WickedEng
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Content", "Content\Content.vcxitems", "{C48F6BFF-F91B-4DB5-98B5-15287DFB7C95}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OctopusTeacher", "Editor\OctopusTeacher.vcxproj", "{76AA3D37-3252-4785-9334-3FC6B8CC07DE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Game_Windows", "Editor\Game_Windows.vcxproj", "{76AA3D37-3252-4785-9334-3FC6B8CC07DE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -56,7 +56,6 @@ Global
 		WickedEngine\WickedEngine_SOURCE.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 		Editor\Editor_SOURCE.vcxitems*{5fe97b9b-a445-4eea-a42d-9de60b891d48}*SharedItemsImports = 4
 		WickedEngine\WickedEngine_SOURCE.vcxitems*{60da258f-e95f-4cf4-a46b-17d80644464b}*SharedItemsImports = 4
-		Editor\Editor_SOURCE.vcxitems*{76aa3d37-3252-4785-9334-3fc6b8cc07de}*SharedItemsImports = 4
 		Editor\Editor_SOURCE.vcxitems*{867febca-09c4-4fe7-8a4c-4d9b1c27e7d0}*SharedItemsImports = 9
 		WickedEngine\shaders\Shaders_SOURCE.vcxitems*{92e86448-0724-4387-abac-96e63edf4190}*SharedItemsImports = 9
 		Content\Content.vcxitems*{c48f6bff-f91b-4db5-98b5-15287dfb7c95}*SharedItemsImports = 9

@@ -1,2 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\OctopusTeacher\utils.h" />
+    <ClInclude Include="..\OctopusTeacher\easing.h" />
+    <ClInclude Include="..\OctopusTeacher\Game.h" />
+    <ClInclude Include="..\OctopusTeacher\OctopusComponent.h" />
+    <ClInclude Include="..\OctopusTeacher\ParticleComponent.h" />
+    <ClInclude Include="..\OctopusTeacher\ParticleLocomotion.h" />
+    <ClInclude Include="..\Editor\stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Editor\stdafx.cpp" />
+  </ItemGroup>
+</Project>

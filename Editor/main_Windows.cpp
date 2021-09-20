@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "main_Windows.h"
 #include "Editor.h"
-#include "Game.h"
 
 #include <fstream>
+#include "../OctopusTeacher/Game.h"
 
 #define MAX_LOADSTRING 100
 
@@ -66,7 +66,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		else {
 
 			editor.Run();
-
+			game->Update(editor.GetDeltaTime());
 		}
 	}
 

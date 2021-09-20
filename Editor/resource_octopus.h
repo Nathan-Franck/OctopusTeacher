@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by OctopusTeacher.rc
+// Used by Game_Windows.rc
 //
 
 #define IDS_APP_TITLE			103

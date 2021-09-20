@@ -4,11 +4,13 @@
 #include <string>
 #include <ranges>
 #include "utils.h"
-#include "Octopus.h"
+#include "OctopusComponent.h"
+#include "ParticleComponent.h"
 
 class Game
 {
 	OctopusBehaviour octopusBehaviour;
+	ParticleComponent particle;
 	Entity testTarget; 
 	float time = 0.0f;
 private:
@@ -41,11 +43,18 @@ public:
 		};
 		const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
 		octopusBehaviour = OctopusBehaviour(octopusEntity);
+
 	}
 	void Update(float dt)
 	{
 		time += dt;
 
 		octopusBehaviour.Update(time);
+
+		//const auto position = componentFromEntity<TransformComponent>(octopusBehaviour.octopusScene)->local_translation;
+		//ParticleLocomotion particle = { .radius = 10, .position = position };
+		//const auto result = particle.MoveTowards({ 0, -10, 0 });
+
+		const auto x = 1;
 	}
 };
