@@ -5,12 +5,12 @@
 #include <ranges>
 #include "utils.h"
 #include "OctopusComponent.h"
-#include "ParticleComponent.h"
+#include "ParticleLocomotion.h"
 
 class Game
 {
-	OctopusBehaviour octopusBehaviour;
-	ParticleComponent particle;
+	OctopusComponent octopusComponent;
+	ParticleLocomotion particle { .radius = 10, .position = { 0, 0, 5, 1 } };
 	Entity testTarget; 
 	float time = 0.0f;
 private:
@@ -42,19 +42,27 @@ public:
 			return INVALID_ENTITY;
 		};
 		const auto octopusEntity = getOctopus(getEntitiesForParent<NameComponent>(octopusScene));
-		octopusBehaviour = OctopusBehaviour(octopusEntity);
+		octopusComponent = OctopusComponent(octopusEntity);
 
 	}
 	void Update(float dt)
 	{
 		time += dt;
 
-		octopusBehaviour.Update(time);
+		octopusComponent.Update(time);
 
-		//const auto position = componentFromEntity<TransformComponent>(octopusBehaviour.octopusScene)->local_translation;
-		//ParticleLocomotion particle = { .radius = 10, .position = position };
-		//const auto result = particle.MoveTowards({ 0, -10, 0 });
-
-		const auto x = 1;
+		TransformComponent* transform = mutableComponentFromEntity<TransformComponent>(octopusComponent.octopusScene);
+		const Entity parentEnt = componentFromEntity<HierarchyComponent>(octopusComponent.octopusScene)->parentID;
+		const TransformComponent* parentTransform = componentFromEntity<TransformComponent>(parentEnt);
+		const XMMATRIX localToGlobal = localToGlobalMatrix(getAncestryForEntity(parentEnt));
+		const XMMATRIX globalToLocal = XMMatrixInverse(nullptr, localToGlobal);
+		const XMFLOAT3 local = transform->translation_local;
+		const XMVECTOR position = XMVector4Transform({ local.x, local.y, local.z, 1 }, localToGlobal);
+		const XMVECTOR direction = position - particle.position;
+		const XMFLOAT3 resFl = particle.MoveTowards(direction);
+		const XMVECTOR result = { resFl.x, resFl.y, resFl.z, 1 };
+		particle.position = result;
+		XMStoreFloat3(&transform->translation_local, XMVector4Transform(result, globalToLocal));
+		transform->UpdateTransform_Parented(*parentTransform);
 	}
 };

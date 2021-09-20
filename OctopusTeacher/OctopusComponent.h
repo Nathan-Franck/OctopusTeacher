@@ -61,7 +61,7 @@ static array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> findLimbsFromScene(Entity
     return getLimbs(armsEntities);
 }
 
-struct OctopusBehaviour {
+struct OctopusComponent {
 
 	array<array<Entity, LIMB_SEGMENTS>, LIMB_COUNT> limbs;
 	vector<XMFLOAT3> relativeTargetGoals;
@@ -76,11 +76,11 @@ struct OctopusBehaviour {
 
 	Entity octopusScene;
 
-	OctopusBehaviour() {
+	OctopusComponent() {
 
 	}
 
-	OctopusBehaviour(
+	OctopusComponent(
 		Entity octopus
 	): octopusScene(octopus) {
 		limbs = findLimbsFromScene(octopus);

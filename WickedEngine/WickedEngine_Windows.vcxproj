@@ -15,7 +15,6 @@
     <ClInclude Include="..\OctopusTeacher\easing.h" />
     <ClInclude Include="..\OctopusTeacher\Game.h" />
     <ClInclude Include="..\OctopusTeacher\OctopusComponent.h" />
-    <ClInclude Include="..\OctopusTeacher\ParticleComponent.h" />
     <ClInclude Include="..\OctopusTeacher\ParticleLocomotion.h" />
     <ClInclude Include="..\OctopusTeacher\utils.h" />
   </ItemGroup>
@@ -75,7 +74,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>BULLET;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>BULLET;$(SolutionDir)WickedEngine;$(SolutionDir)OctopusTeacher;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -83,7 +82,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
