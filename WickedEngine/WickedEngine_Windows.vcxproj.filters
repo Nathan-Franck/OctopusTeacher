@@ -1,18 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\OctopusTeacher\easing.h" />
-    <ClInclude Include="..\OctopusTeacher\Game.h" />
-    <ClInclude Include="..\OctopusTeacher\OctopusComponent.h" />
-    <ClInclude Include="..\OctopusTeacher\ParticleLocomotion.h" />
-    <ClInclude Include="..\OctopusTeacher\Utils.h" />
-    <ClInclude Include="..\Editor\stdafx.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="easing.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="OctopusComponent.h" />
+    <ClInclude Include="ParticleLocomotion.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="Entity.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Editor\stdafx.cpp" />
-    <ClCompile Include="..\OctopusTeacher\ParticleLocomotion.cpp" />
-    <ClCompile Include="..\OctopusTeacher\OctopusComponent.cpp" />
-    <ClCompile Include="..\OctopusTeacher\Game.cpp" />
-    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="OctopusComponent.cpp" />
+    <ClCompile Include="ParticleLocomotion.cpp" />
   </ItemGroup>
 </Project>

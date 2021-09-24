@@ -1,5 +1,4 @@
 #pragma once
-#include <LUA/lmathlib.c>
 
 float easeOutBack(float x)
 {

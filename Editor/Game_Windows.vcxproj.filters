@@ -19,9 +19,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h">
-      <Filter>Code</Filter>
-    </ClInclude>
     <ClInclude Include="static_vector.h">
       <Filter>Code</Filter>
     </ClInclude>

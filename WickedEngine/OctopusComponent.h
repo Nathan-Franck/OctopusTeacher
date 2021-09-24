@@ -28,11 +28,11 @@ struct OctopusComponent {
 
 	OctopusComponent() {}
 
+	void Initialize(Entity octopus);
+
 	OctopusComponent(Entity octopus) {
 		Initialize(octopus);
 	}
-
-	void Initialize(Entity octopus);
 
 	void Retargetting(float time);
 

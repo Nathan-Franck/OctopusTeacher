@@ -1314,12 +1314,12 @@ namespace wiScene
 		ComponentManager<T>& GetManager() {
 			return *(ComponentManager<T>*)components[typeid(T)];
 		}
+		template<class T>
+		void WhenMutable(T component) {
+		}
 
 		static void WhenMutable(TransformComponent& component) {
 			component.SetDirty();
-		}
-		template<class T>
-		void WhenMutable(T component) {
 		}
 
 		// Non-serialized attributes:

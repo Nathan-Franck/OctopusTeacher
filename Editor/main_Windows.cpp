@@ -3,7 +3,7 @@
 #include "Editor.h"
 
 #include <fstream>
-#include "../OctopusTeacher/Game.h"
+#include <Game.h>
 
 #define MAX_LOADSTRING 100
 

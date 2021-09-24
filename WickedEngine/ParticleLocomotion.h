@@ -1,7 +1,6 @@
 #pragma once
-#include "WickedEngine.h"
 
-constexpr int RESOLVE_CAP = 4;
+#include "WickedEngine.h"
 
 class ParticleLocomotion
 {
