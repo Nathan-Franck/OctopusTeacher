@@ -51,7 +51,7 @@ namespace EntityHelper {
 }
 
 template<typename... T>
-class TupleEntity {
+class Ent {
 private:
 
 	template<EntityHelper::InTuple<tuple<T...>> Component>
@@ -66,7 +66,7 @@ private:
 	auto set_many(tuple<Component...> toSet) {
 		return std::apply([this](auto... component) {
 			std::tuple<T...> result = components;
-			((result = TupleEntity{ result }.set<Component>(component)), ...);
+			((result = Ent{ result }.set<Component>(component)), ...);
 			return result;
 			}, toSet);
 	}
@@ -74,8 +74,8 @@ private:
 public:
 	tuple<T...> components;
 
-	explicit TupleEntity(T... args) : components{ std::make_tuple(args...) } {}
-	explicit TupleEntity(std::tuple<T...> arg) : components{ arg } {}
+	explicit Ent(T... args) : components{ std::make_tuple(args...) } {}
+	explicit Ent(std::tuple<T...> arg) : components{ arg } {}
 
 	template<typename... Component>
 	auto merge(tuple<Component...> toMerge) {
@@ -96,6 +96,11 @@ public:
 			}, toMerge);
 	}
 
+	template<typename... Component>
+	auto merge(Component... toMerge) {
+		return merge(make_tuple(toMerge...));
+	}
+
 	template<typename... Components>
 	tuple<Components...> prune() {
 		using Result = tuple<Components...>;
@@ -113,26 +118,6 @@ public:
 		return prune<Components...>();
 	}
 };
-
-namespace ConstexprMadness
-{
-	template <int T>
-	struct num {
-		static constexpr int value = T;
-	};
-
-	constexpr std::tuple tup = {
-		num<1> {},
-		num<3> {},
-		num<4> {},
-		num<5> {}
-	};
-	constexpr auto result = std::apply([](auto...ts) {
-		return std::tuple_cat(std::conditional_t<(decltype(ts)::value > 3),
-			std::tuple<decltype(ts)>,
-			std::tuple<>>{}...);
-		}, tup);
-}
 
 namespace EntityTester
 {
@@ -161,41 +146,32 @@ namespace EntityTester
 	struct Lats {
 	};
 
-	int getHealthCurrent(tuple<Health> entity) {
-		const auto [health] = entity;
+	int getHealthCurrent(tuple<Health> components) {
+		const auto [health] = components;
 		return health.current;
 	}
 
 	void test() {
-		auto entity = std::make_tuple(
-			Physics{XMFLOAT2{0, 0}, XMFLOAT2{10, 10}},
-			Health{100, 100}
-		);
-		auto entity3 = std::make_tuple(
+		tuple components3(
 			Glutes{ 2 }
 		);
-		auto entity2 = TupleEntity{
-			tuple_cat(entity, entity3)
-		};
-		auto [physics] = TupleEntity{ entity }.prune<Physics>();
-		physics.velocity = XMFLOAT2{ 32, 32 };
-		entity = TupleEntity{ entity }.merge(make_tuple(physics));
+		auto components = Ent{ tuple(
+			Physics{ {0, 0}, {10, 10} },
+			Health{ 100, 100 }
+		) }.merge(components3);
+		auto [physics] = Ent{ components }.prune<Physics>();
+		physics.velocity = { 32, 32 };
+		components = Ent{ components }.merge(physics);
 
-		using GettableThing = tuple<Physics>;
-		const auto x = getHealthCurrent(TupleEntity{ entity });
+		const auto x = getHealthCurrent(Ent{ components });
 		std::cout << x << std::endl;
 
 		{
-			auto [physics, health] = TupleEntity{ entity }.prune<Physics, Health>();
+			auto [physics, health] = Ent{ components }.prune<Physics, Health>();
 			health.current -= 10;
-			//entity = TupleEntity{ entity }.set_many(physics, health);
-
-			//auto result = TupleEntity{ entity }.append(health);
-			auto result2 = TupleEntity{ entity }.merge(make_tuple(Glutes{ 20 }, health));
-			//auto result3 = TupleEntity{ entity }.merge(Glutes{ 20 }, health);
-			auto result4 = TupleEntity{ result2 }.merge(make_tuple( Glutes{ 30 }, 2, 3.14 ));
-			constexpr bool what = EntityHelper::OutOfTuple<int, tuple<int>>;
-			auto [physics2, health2, glutes2] = TupleEntity{ result4 }.prune<Physics, Health, Glutes>();
+			auto result2 = Ent{ components }.merge(Glutes{ 20 }, health);
+			auto result4 = Ent{ result2 }.merge(Glutes{ 30 }, 2, 3.14);
+			auto [physics2, health2, glutes2] = Ent{ result4 }.prune<Physics, Health, Glutes>();
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
