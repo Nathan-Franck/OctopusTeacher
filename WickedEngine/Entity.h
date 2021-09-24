@@ -54,7 +54,7 @@ template<typename... T>
 class Ent {
 private:
 
-	template<EntityHelper::InTuple<tuple<T...>> Component>
+	template<typename Component>
 	auto set(Component component) {
 		constexpr std::size_t index =
 			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
@@ -62,7 +62,7 @@ private:
 		return components;
 	}
 
-	template<EntityHelper::InTuple<tuple<T...>>... Component>
+	template<typename... Component>
 	auto set_many(tuple<Component...> toSet) {
 		return std::apply([this](auto... component) {
 			std::tuple<T...> result = components;
@@ -101,19 +101,19 @@ public:
 		return merge(make_tuple(toMerge...));
 	}
 
-	template<typename Component>
+	template<EntityHelper::InTuple<tuple<T...>> Component>
 	Component get() {
 		constexpr std::size_t index =
 			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
 		return std::get<index>(components);
 	}
 
-	template<typename... Component>
+	template<EntityHelper::InTuple<tuple<T...>>... Component>
 	std::tuple<Component...> prune() {
 		return std::make_tuple(get<Component>()...);
 	}
 
-	template<typename... Components>
+	template<EntityHelper::InTuple<tuple<T...>>... Components>
 	operator tuple<Components...>() {
 		return prune<Components...>();
 	}
@@ -136,16 +136,6 @@ namespace EntityTester
 		int special;
 	};
 
-	enum class DomainSpec {
-		First,
-		Second,
-		Nice
-	};
-
-	template<auto DomainInfo>
-	struct Lats {
-	};
-
 	int getHealthCurrent(tuple<Health, Physics> components) {
 		const auto [health, physics] = components;
 		return health.current;
@@ -155,10 +145,10 @@ namespace EntityTester
 		tuple components3(
 			Glutes{ 2 }
 		);
-		auto components = Ent{ tuple(
+		auto components = Ent{ 
 			Physics{ {0, 0}, {10, 10} },
 			Health{ 100, 100 }
-		) }.merge(components3);
+		}.merge(components3);
 		auto physics = Ent{ components }.get<Physics>();
 		physics.velocity = { 32, 32 };
 		components = Ent{ components }.merge(physics);
