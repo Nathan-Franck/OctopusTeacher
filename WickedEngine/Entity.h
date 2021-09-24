@@ -48,6 +48,16 @@ namespace EntityHelper {
 
 	template<typename T, typename Tuple>
 	concept OutOfTuple = !InTuple<T, Tuple>;
+
+	//template<typename First, typename... Rest, typename Other>
+	//struct subtract_type {
+	//	static constexpr
+	//};
+
+	//template<typename First, typename... Rest, typename FirstOther, typename... RestOther>
+	//struct subtract_types {
+	//	static constexpr 
+	//};
 }
 
 template<typename... T>
@@ -96,17 +106,65 @@ public:
 		return tuple_cat(components, make_tuple(component));
 	}
 
-	//template<typename Component>
-	//auto merge(Component component) {
-	//	return TupleEntity{ components }.append<Component>(component);
-	//}
+	template<EntityHelper::OutOfTuple<tuple<T...>>... Component>
+	auto append(Component... component) {
+		return tuple_cat(components, make_tuple(component...));
+	}
 
-	//template<typename First, typename... Component>
-	//auto merge(First first, Component... component) {
-	//	auto intermediate = TupleEntity{ components }.append<First>(first);
-	//	return make_from_tuple<TupleEntity>(intermediate).merge<Component...>(component...);
-	//}
+	// Sub?
+
+	template<EntityHelper::InTuple<tuple<T...>>... Component>
+	tuple<> subtract(tuple<Component...> other) {
+		return {};
+	};
+
+	//template<EntityHelper::InTuple<tuple<T...>>... Match, typename... After>
+	//tuple<After...> subtract(tuple<Match..., After...> other) {
+	//	return { };
+	//};
+
+	//template<typename... Component>
+	//tuple<Component...> subtract(tuple<Component...> component) {
+	//	return { component... };
+	//};
+
+	//template<typename... Component>
+	//auto subtract(tuple<Component...> component) {
+	//	return { component };
+	//};
+
+	//template<typename... First, typename... Other>
+	//auto subtract(tuple<First...> first, tuple<Other...> other) {
+	//	return tuple_cat(first, other);
+	//};
+
+	template<typename... Component>
+	auto merge(Component... component) {
+		return std::tuple_cat(components, std::tuple_cat(std::conditional_t<EntityHelper::OutOfTuple<Component, tuple<T...>>,
+			std::tuple<Component>,
+			std::tuple<>>{}...));
+	}
 };
+
+namespace ConstexprMadness
+{
+	template <int T>
+	struct num {
+		static constexpr int value = T;
+	};
+
+	constexpr std::tuple tup = {
+		num<1> {},
+		num<3> {},
+		num<4> {},
+		num<5> {}
+	};
+	constexpr auto result = std::apply([](auto...ts) {
+		return std::tuple_cat(std::conditional_t<(decltype(ts)::value > 3),
+			std::tuple<decltype(ts)>,
+			std::tuple<>>{}...);
+		}, tup);
+}
 
 namespace EntityTester
 {
@@ -125,12 +183,21 @@ namespace EntityTester
 		int special;
 	};
 
+	enum class DomainSpec {
+		First,
+		Second,
+		Nice
+	};
+
+	template<auto DomainInfo>
+	struct Lats {
+	};
+
 	template<typename... T>
 	auto get_position_x(tuple<T...> entity) {
 		const auto thing = TupleEntity{ entity }.get<Physics>();
 		return thing.position.x;
 	}
-
 
 	void test() {
 		auto entity = std::make_tuple(
@@ -159,7 +226,8 @@ namespace EntityTester
 			auto result = TupleEntity{ entity }.append(health);
 			auto result2 = TupleEntity{ entity }.append(Glutes{ 20 });
 			//auto result3 = TupleEntity{ entity }.merge(Glutes{ 20 }, health);
-
+			auto result4 = TupleEntity{ make_tuple(1, 1.0f) }.merge("hi", 2, 1.0);
+			constexpr bool what = EntityHelper::OutOfTuple<int, tuple<int>>;
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
