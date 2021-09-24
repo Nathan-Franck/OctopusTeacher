@@ -1,6 +1,6 @@
 
 #include "Game.h"
-#include "Entity.h"
+#include "TypeSet.h"
 
 void Game::Update(float dt)
 {
@@ -22,5 +22,5 @@ void Game::Update(float dt)
 	XMStoreFloat3(&transform->translation_local, XMVector4Transform(result, globalToLocal));
 	transform->UpdateTransform_Parented(*parentTransform);
 
-	EntityTester::test();
+	TypeSetTester::test();
 }

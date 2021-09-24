@@ -7,7 +7,7 @@
     <ClInclude Include="OctopusComponent.h" />
     <ClInclude Include="ParticleLocomotion.h" />
     <ClInclude Include="utils.h" />
-    <ClInclude Include="Entity.h" />
+    <ClInclude Include="TypeSet.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />

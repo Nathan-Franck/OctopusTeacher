@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <list>
 
-namespace EntityHelper {
+namespace TypeSetUtils {
 
 	template<typename T, typename Tuple>
 	struct tuple_element_index_helper;
@@ -44,29 +44,29 @@ namespace EntityHelper {
 		= tuple_element_index<T, Tuple>::value;
 
 	template<typename T, typename Tuple>
-	concept InTuple = EntityHelper::tuple_element_index_helper<T, Tuple>::value < std::tuple_size_v<Tuple>;
+	concept InTuple = TypeSetUtils::tuple_element_index_helper<T, Tuple>::value < std::tuple_size_v<Tuple>;
 
 	template<typename T, typename Tuple>
 	concept OutOfTuple = !InTuple<T, Tuple>;
 }
 
 template<typename... T>
-class Ent {
+class TypeSet {
 private:
 
 	template<typename Component>
-	auto set(Component component) {
+	tuple<T...> set(Component component) {
 		constexpr std::size_t index =
-			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
+			TypeSetUtils::tuple_element_index_v<Component, std::tuple<T...>>;
 		std::get<index>(components) = component;
 		return components;
 	}
 
 	template<typename... Component>
-	auto set_many(tuple<Component...> toSet) {
+	tuple<T...> set_many(tuple<Component...> toSet) {
 		return std::apply([this](auto... component) {
 			std::tuple<T...> result = components;
-			((result = Ent{ result }.set<Component>(component)), ...);
+			((result = TypeSet{ result }.set<Component>(component)), ...);
 			return result;
 			}, toSet);
 	}
@@ -74,22 +74,22 @@ private:
 public:
 	tuple<T...> components;
 
-	explicit Ent(T... args) : components{ std::make_tuple(args...) } {}
-	explicit Ent(std::tuple<T...> arg) : components{ arg } {}
+	explicit TypeSet(T... args) : components{ std::make_tuple(args...) } {}
+	explicit TypeSet(std::tuple<T...> arg) : components{ arg } {}
 
 	template<typename... Component>
 	auto merge(tuple<Component...> toMerge) {
 		return std::apply([this](auto... component) {
 			auto toSet =
 				std::tuple_cat(
-					std::get<EntityHelper::InTuple<Component, decltype(components)> ? 0 : 1>(
+					std::get<TypeSetUtils::InTuple<Component, decltype(components)> ? 0 : 1>(
 						std::make_tuple(
 							std::make_tuple(component),
 							std::make_tuple()))...);
 			return std::tuple_cat(
 				set_many(toSet),
 				std::tuple_cat(
-					std::get<EntityHelper::OutOfTuple<Component, decltype(components)> ? 0 : 1>(
+					std::get<TypeSetUtils::OutOfTuple<Component, decltype(components)> ? 0 : 1>(
 						std::make_tuple(
 							std::make_tuple(component),
 							std::make_tuple()))...));
@@ -101,25 +101,25 @@ public:
 		return merge(make_tuple(toMerge...));
 	}
 
-	template<EntityHelper::InTuple<tuple<T...>> Component>
+	template<TypeSetUtils::InTuple<tuple<T...>> Component>
 	Component get() {
 		constexpr std::size_t index =
-			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
+			TypeSetUtils::tuple_element_index_v<Component, std::tuple<T...>>;
 		return std::get<index>(components);
 	}
 
-	template<EntityHelper::InTuple<tuple<T...>>... Component>
+	template<TypeSetUtils::InTuple<tuple<T...>>... Component>
 	std::tuple<Component...> pick() {
 		return std::make_tuple(get<Component>()...);
 	}
 
-	template<EntityHelper::InTuple<tuple<T...>>... Components>
+	template<TypeSetUtils::InTuple<tuple<T...>>... Components>
 	operator tuple<Components...>() {
 		return pick<Components...>();
 	}
 };
 
-namespace EntityTester
+namespace TypeSetTester
 {
 
 	struct Physics {
@@ -136,8 +136,8 @@ namespace EntityTester
 		int special;
 	};
 
-	int getHealthCurrent(tuple<Health, Physics> components) {
-		const auto [health, physics] = components;
+	int getHealthCurrent(tuple<Health> components) {
+		const auto [health] = components;
 		return health.current;
 	}
 
@@ -145,23 +145,23 @@ namespace EntityTester
 		tuple components3(
 			Glutes{ 2 }
 		);
-		auto components = Ent{ 
+		auto components = TypeSet{ 
 			Physics{ {0, 0}, {10, 10} },
 			Health{ 100, 100 }
 		}.merge(components3);
-		auto physics = Ent{ components }.get<Physics>();
+		auto physics = TypeSet{ components }.get<Physics>();
 		physics.velocity = { 32, 32 };
-		components = Ent{ components }.merge(physics);
+		components = TypeSet{ components }.merge(physics);
 
-		const auto x = getHealthCurrent(Ent{ components });
+		const auto x = getHealthCurrent(TypeSet{ components });
 		std::cout << x << std::endl;
 
 		{
-			auto [physics, health] = Ent{ components }.pick<Physics, Health>();
+			auto [physics, health] = TypeSet{ components }.pick<Physics, Health>();
 			health.current -= 10;
-			auto result2 = Ent{ components }.merge(Glutes{ 20 }, health);
-			auto result4 = Ent{ result2 }.merge(Glutes{ 30 }, 2, 3.14);
-			auto [physics2, health2, glutes2] = Ent{ result4 }.pick<Physics, Health, Glutes>();
+			auto result2 = TypeSet{ components }.merge(Glutes{ 20 }, health);
+			auto result4 = TypeSet{ result2 }.merge(Glutes{ 30 }, 2, 3.14);
+			auto [physics2, health2, glutes2] = TypeSet{ result4 }.pick<Physics, Health, Glutes>();
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
