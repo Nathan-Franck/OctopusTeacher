@@ -101,16 +101,16 @@ public:
 		return merge(make_tuple(toMerge...));
 	}
 
-	template<typename... Components>
-	tuple<Components...> prune() {
-		using Result = tuple<Components...>;
-		return std::apply([this](auto... component) {
-			return std::tuple_cat(
-				std::get<EntityHelper::InTuple<decltype(component), Result> ? 0 : 1>(
-					std::make_tuple(
-						std::make_tuple(component),
-						std::make_tuple()))...);
-			}, components);
+	template<typename Component>
+	Component get() {
+		constexpr std::size_t index =
+			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
+		return std::get<index>(components);
+	}
+
+	template<typename... Component>
+	std::tuple<Component...> prune() {
+		return std::make_tuple(get<Component>()...);
 	}
 
 	template<typename... Components>
@@ -146,8 +146,8 @@ namespace EntityTester
 	struct Lats {
 	};
 
-	int getHealthCurrent(tuple<Health> components) {
-		const auto [health] = components;
+	int getHealthCurrent(tuple<Health, Physics> components) {
+		const auto [health, physics] = components;
 		return health.current;
 	}
 
@@ -159,7 +159,7 @@ namespace EntityTester
 			Physics{ {0, 0}, {10, 10} },
 			Health{ 100, 100 }
 		) }.merge(components3);
-		auto [physics] = Ent{ components }.prune<Physics>();
+		auto physics = Ent{ components }.get<Physics>();
 		physics.velocity = { 32, 32 };
 		components = Ent{ components }.merge(physics);
 
