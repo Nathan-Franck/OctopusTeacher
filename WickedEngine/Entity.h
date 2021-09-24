@@ -109,13 +109,13 @@ public:
 	}
 
 	template<EntityHelper::InTuple<tuple<T...>>... Component>
-	std::tuple<Component...> prune() {
+	std::tuple<Component...> pick() {
 		return std::make_tuple(get<Component>()...);
 	}
 
 	template<EntityHelper::InTuple<tuple<T...>>... Components>
 	operator tuple<Components...>() {
-		return prune<Components...>();
+		return pick<Components...>();
 	}
 };
 
@@ -157,11 +157,11 @@ namespace EntityTester
 		std::cout << x << std::endl;
 
 		{
-			auto [physics, health] = Ent{ components }.prune<Physics, Health>();
+			auto [physics, health] = Ent{ components }.pick<Physics, Health>();
 			health.current -= 10;
 			auto result2 = Ent{ components }.merge(Glutes{ 20 }, health);
 			auto result4 = Ent{ result2 }.merge(Glutes{ 30 }, 2, 3.14);
-			auto [physics2, health2, glutes2] = Ent{ result4 }.prune<Physics, Health, Glutes>();
+			auto [physics2, health2, glutes2] = Ent{ result4 }.pick<Physics, Health, Glutes>();
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
