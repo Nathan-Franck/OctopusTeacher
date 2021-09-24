@@ -4,7 +4,7 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-bool utils::IsAncestorOfEntity(const Entity& potentialAncestor, const Entity& entity) {
+bool Utils::IsAncestorOfEntity(const Entity& potentialAncestor, const Entity& entity) {
 	auto hierarchyComponent = GetScene().hierarchy.GetComponent(entity);
 	if (hierarchyComponent == nullptr) { return false; }
 	auto parent = hierarchyComponent->parentID;
@@ -19,7 +19,7 @@ bool utils::IsAncestorOfEntity(const Entity& potentialAncestor, const Entity& en
 }
 
 [[maybe_unused]]
-Entity utils::FindOffspringWithName(const Entity& entity, const string& name) {
+Entity Utils::FindOffspringWithName(const Entity& entity, const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
 	for (size_t i = 0; i < manager.GetCount(); i++) {
 		const auto ent = manager.GetEntity(i);
@@ -30,7 +30,7 @@ Entity utils::FindOffspringWithName(const Entity& entity, const string& name) {
 	return INVALID_ENTITY;
 }
 
-Entity utils::FindWithName(const string& name) {
+Entity Utils::FindWithName(const string& name) {
 	const ComponentManager<NameComponent>& manager = GetScene().GetManager<NameComponent>();
 	for (size_t i = 0; i < manager.GetCount(); i++) {
 		const auto nameComponent = manager[i];
@@ -39,7 +39,7 @@ Entity utils::FindWithName(const string& name) {
 	return INVALID_ENTITY;
 }
 
-vector<Entity> utils::GetAncestryForEntity(const Entity& child)
+vector<Entity> Utils::GetAncestryForEntity(const Entity& child)
 {
 	vector<Entity> ancestry{};
 	Entity next = child;
@@ -52,7 +52,7 @@ vector<Entity> utils::GetAncestryForEntity(const Entity& child)
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-vector<Entity> utils::GetAncestryForParentChild(const Entity& parent, const Entity& child)
+vector<Entity> Utils::GetAncestryForParentChild(const Entity& parent, const Entity& child)
 {
 	vector<Entity> ancestry{};
 	Entity next = child;
@@ -65,7 +65,7 @@ vector<Entity> utils::GetAncestryForParentChild(const Entity& parent, const Enti
 	return vector<Entity>(ancestry.rbegin(), ancestry.rend());
 }
 
-XMMATRIX utils::LocalToGlobalMatrix(const vector<Entity>& ancestry)
+XMMATRIX Utils::LocalToGlobalMatrix(const vector<Entity>& ancestry)
 {
 	XMMATRIX result = XMMatrixIdentity();
 	for (auto ancestor : ancestry) {
@@ -86,7 +86,7 @@ XMMATRIX utils::LocalToGlobalMatrix(const vector<Entity>& ancestry)
 // Can rely on assumption that hierarchy elements are sorted from ancestors <-> dependence to call `UpdateTransform` on all transform components in the hierarchical order This method demonstrates the current intention of WickedEngine's TransformComponent but my thinking now is to replace this with a more transparent toolkit of functions that lay out a bit better what's happening.
 
 [[maybe_unused]]
-void utils::BruteRecalculateAllMatrices()
+void Utils::BruteRecalculateAllMatrices()
 {
 	for (size_t i = 0; i < GetScene().hierarchy.GetCount(); i++) {
 		const auto hierarchy = GetScene().hierarchy[i];

@@ -42,20 +42,28 @@ namespace EntityHelper {
 	template<typename T, typename Tuple>
 	inline constexpr std::size_t tuple_element_index_v
 		= tuple_element_index<T, Tuple>::value;
+
+	template<typename T, typename Tuple>
+	concept InTuple = EntityHelper::tuple_element_index_helper<T, Tuple>::value < std::tuple_size_v<Tuple>;
+
+	template<typename T, typename Tuple>
+	concept OutOfTuple = !InTuple<T, Tuple>;
 }
 
 template<typename... T>
-class TupleEntity : std::tuple<T...> {
+class TupleEntity {
 private:
 public:
-	explicit TupleEntity(T... args) : std::tuple<T...>{ std::make_tuple(args...) } {}
-	explicit TupleEntity(std::tuple<T...> tuple) : std::tuple<T...>{ tuple } {}
+	tuple<T...> components;
+
+	explicit TupleEntity(T... args) : components{ std::make_tuple(args...) } {}
+	explicit TupleEntity(std::tuple<T...> arg) : components{ arg } {}
 
 	template<typename Component>
 	Component get() {
 		constexpr std::size_t index =
 			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
-		return std::get<index>(*this);
+		return std::get<index>(components);
 	}
 
 	template<typename... Component>
@@ -64,18 +72,40 @@ public:
 	}
 
 	template<typename Component>
-	void set(Component component) {
+	auto set(Component component) {
 		constexpr std::size_t index =
 			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
-		std::get<index>(*this) = component;
+		std::get<index>(components) = component;
+		return components;
 	}
 
 	template<typename... Component>
-	void set_many(Component... component) {
-		(set<Component>(component), ...);
+	auto set_many(Component... component) {
+		std::tuple<T...> result = components;
+		((result = TupleEntity{ result }.set<Component>(component)), ...);
+		return result;
 	}
 
-	tuple<T...> tuple = *this;
+	template<EntityHelper::InTuple<tuple<T...>> Component>
+	auto append(Component component) {
+		return set(component);
+	}
+
+	template<EntityHelper::OutOfTuple<tuple<T...>> Component>
+	auto append(Component component) {
+		return tuple_cat(components, make_tuple(component));
+	}
+
+	//template<typename Component>
+	//auto merge(Component component) {
+	//	return TupleEntity{ components }.append<Component>(component);
+	//}
+
+	//template<typename First, typename... Component>
+	//auto merge(First first, Component... component) {
+	//	auto intermediate = TupleEntity{ components }.append<First>(first);
+	//	return make_from_tuple<TupleEntity>(intermediate).merge<Component...>(component...);
+	//}
 };
 
 namespace EntityTester
@@ -96,35 +126,41 @@ namespace EntityTester
 	};
 
 	template<typename... T>
-	auto get_position_x(TupleEntity<T...> entity) {
-		const auto thing = entity.get<Physics>();
+	auto get_position_x(tuple<T...> entity) {
+		const auto thing = TupleEntity{ entity }.get<Physics>();
 		return thing.position.x;
 	}
 
 
 	void test() {
-		auto entity = TupleEntity{
+		auto entity = std::make_tuple(
 			Physics{XMFLOAT2{0, 0}, XMFLOAT2{10, 10}},
-			Health{100, 100},
-		};
-		auto entity3 = TupleEntity{
-			Glutes{ 2 },
-		};
+			Health{100, 100}
+		);
+		auto entity3 = std::make_tuple(
+			Glutes{ 2 }
+		);
 		auto entity2 = TupleEntity{
-			tuple_cat(entity.tuple, entity3.tuple)
+			tuple_cat(entity, entity3)
 		};
-		auto physics = entity.get<Physics>();
+		auto physics = TupleEntity{ entity }.get<Physics>();
 		physics.velocity = XMFLOAT2{ 32, 32 };
-		entity.set(physics);
+		TupleEntity{ entity }.set(physics);
 
 		const auto x = get_position_x(entity);
 		std::cout << x << std::endl;
 
 		{
-			auto [physics, health] = entity.get_many<Physics, Health>();
+			auto [physics, health] = TupleEntity{ entity }.get_many<Physics, Health>();
 			health.current -= 10;
-			entity.set_many(physics, health);
-			auto [physics2, health2] = entity.get_many<Physics, Health>();
+			//entity = TupleEntity{ entity }.set_many(physics, health);
+			auto [physics2, health2] = TupleEntity{ entity }.get_many<Physics, Health>();
+
+			auto result = TupleEntity{ entity }.append(health);
+			auto result2 = TupleEntity{ entity }.append(Glutes{ 20 });
+			//auto result3 = TupleEntity{ entity }.merge(Glutes{ 20 }, health);
+
+
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
 			std::cout << health2.current << std::endl;

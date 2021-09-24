@@ -12,7 +12,7 @@ using namespace std;
 using namespace wiECS;
 using namespace wiScene;
 
-namespace utils
+namespace Utils
 {
 
 	template<class T>

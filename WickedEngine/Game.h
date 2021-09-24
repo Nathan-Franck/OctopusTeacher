@@ -29,18 +29,18 @@ public:
 		const auto octopusScene = LoadModel("../CustomContent/Game.wiscene", XMMatrixTranslation(0, 0, 10), true);
 
 		testTarget = GetScene().Entity_CreateObject("Tentacle Target");
-		const auto transform = utils::GetMutableForEntity<TransformComponent>(testTarget);
+		const auto transform = Utils::GetMutableForEntity<TransformComponent>(testTarget);
 		transform->translation_local = { 0, 0, 15 };
 		transform->UpdateTransform();
 
 		const auto getOctopus = [](const vector<Entity>& entities)
 		{
 			for (const auto entity : entities)
-				if (utils::GetForEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
+				if (Utils::GetForEntity<NameComponent>(entity)->name == "OctopusRiggedTopo.glb")
 					return entity;
 			return INVALID_ENTITY;
 		};
-		const auto octopusEntity = getOctopus(utils::Children<NameComponent>(octopusScene));
+		const auto octopusEntity = getOctopus(Utils::Children<NameComponent>(octopusScene));
 		octopusComponent = OctopusComponent(octopusEntity);
 
 	}
