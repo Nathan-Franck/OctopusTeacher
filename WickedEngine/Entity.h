@@ -77,27 +77,6 @@ public:
 	explicit TupleEntity(T... args) : components{ std::make_tuple(args...) } {}
 	explicit TupleEntity(std::tuple<T...> arg) : components{ arg } {}
 
-	template<typename Component>
-	Component get() {
-		constexpr std::size_t index =
-			EntityHelper::tuple_element_index_v<Component, std::tuple<T...>>;
-		return std::get<index>(components);
-	}
-
-	template<typename... Component>
-	std::tuple<Component...> get_many() {
-		return std::make_tuple(get<Component>()...);
-	}
-
-	template<typename... Component>
-	auto set_many(tuple<Component...> toSet) {
-		return std::apply([this](auto... component) {
-			std::tuple<T...> result = components;
-			((result = TupleEntity{ result }.set<Component>(component)), ...);
-			return result;
-			}, toSet);
-	}
-
 	template<typename... Component>
 	auto merge(tuple<Component...> toMerge) {
 		return std::apply([this](auto... component) {
@@ -115,6 +94,23 @@ public:
 							std::make_tuple(component),
 							std::make_tuple()))...));
 			}, toMerge);
+	}
+
+	template<typename... Components>
+	tuple<Components...> prune() {
+		using Result = tuple<Components...>;
+		return std::apply([this](auto... component) {
+			return std::tuple_cat(
+				std::get<EntityHelper::InTuple<decltype(component), Result> ? 0 : 1>(
+					std::make_tuple(
+						std::make_tuple(component),
+						std::make_tuple()))...);
+			}, components);
+	}
+
+	template<typename... Components>
+	operator tuple<Components...>() {
+		return prune<Components...>();
 	}
 };
 
@@ -165,10 +161,9 @@ namespace EntityTester
 	struct Lats {
 	};
 
-	template<typename... T>
-	auto get_position_x(tuple<T...> entity) {
-		const auto thing = TupleEntity{ entity }.get<Physics>();
-		return thing.position.x;
+	int getHealthCurrent(tuple<Health> entity) {
+		const auto [health] = entity;
+		return health.current;
 	}
 
 	void test() {
@@ -182,15 +177,16 @@ namespace EntityTester
 		auto entity2 = TupleEntity{
 			tuple_cat(entity, entity3)
 		};
-		auto physics = TupleEntity{ entity }.get<Physics>();
+		auto [physics] = TupleEntity{ entity }.prune<Physics>();
 		physics.velocity = XMFLOAT2{ 32, 32 };
 		entity = TupleEntity{ entity }.merge(make_tuple(physics));
 
-		const auto x = get_position_x(entity);
+		using GettableThing = tuple<Physics>;
+		const auto x = getHealthCurrent(TupleEntity{ entity });
 		std::cout << x << std::endl;
 
 		{
-			auto [physics, health] = TupleEntity{ entity }.get_many<Physics, Health>();
+			auto [physics, health] = TupleEntity{ entity }.prune<Physics, Health>();
 			health.current -= 10;
 			//entity = TupleEntity{ entity }.set_many(physics, health);
 
@@ -199,7 +195,7 @@ namespace EntityTester
 			//auto result3 = TupleEntity{ entity }.merge(Glutes{ 20 }, health);
 			auto result4 = TupleEntity{ result2 }.merge(make_tuple( Glutes{ 30 }, 2, 3.14 ));
 			constexpr bool what = EntityHelper::OutOfTuple<int, tuple<int>>;
-			auto [physics2, health2, glutes2] = TupleEntity{ result4 }.get_many<Physics, Health, Glutes>();
+			auto [physics2, health2, glutes2] = TupleEntity{ result4 }.prune<Physics, Health, Glutes>();
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
