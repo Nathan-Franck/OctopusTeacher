@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "TypeSet.h"
 #include <Model.h>
+#include <MadnessModel.h>
 
 void Game::Update(float dt)
 {
@@ -25,4 +26,5 @@ void Game::Update(float dt)
 
 	TypeSetTester::Test();
 	ModelTester::Test();
+	MadnessModelTester::Test();
 }

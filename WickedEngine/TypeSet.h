@@ -130,6 +130,12 @@ public:
 	{
 		return pick<Components...>();
 	}
+
+	template<typename... Components>
+	auto operator+(TypeSet<Components...> rhs)
+	{
+		return merge(rhs.components);
+	}
 };
 
 namespace TypeSetTester
@@ -193,5 +199,7 @@ namespace TypeSetTester
 			std::cout << health2.current << std::endl;
 			std::cout << glutes2.special << std::endl;
 		}
+
+		auto result = TypeSet{ Physics {} } + TypeSet{ Health{} };
 	}
 }
