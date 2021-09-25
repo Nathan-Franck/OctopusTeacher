@@ -27,7 +27,7 @@ private:
 	unordered_set<std::type_index> unhandled_changes;
 	std::mutex change_handling_mutex;
 
-	void changeHandler()
+	void change_handler()
 	{
 		while (unhandled_changes.size() > 0)
 		{
@@ -45,20 +45,20 @@ public:
 	Model(std::tuple<T...> arg) : state{ arg } {}
 
 	template <TypeSetUtils::InTuple<tuple<T...>>... Member>
-	void Listen(void (*callback)(tuple<T...>&))
+	void listen(void (*callback)(tuple<T...>&))
 	{
 		(listeners[typeid(Member)].push_back((void*)callback), ...);
 	}
 	const tuple<T...>& State = state;
 	template <TypeSetUtils::InTuple<tuple<T...>>... Member>
-	void Merge(tuple<Member...> partialState)
+	void merge(tuple<Member...> partialState)
 	{
 		state = TypeSet{ state }.merge(partialState);
 		(unhandled_changes.insert(typeid(Member)), ...);
 		std::unique_lock<std::mutex> lock(change_handling_mutex, std::try_to_lock);
 		if (lock.owns_lock())
 		{
-			changeHandler();
+			change_handler();
 		}
 	}
 };
@@ -81,15 +81,15 @@ namespace ModelTester
 		);
 		Model model{ initialState };
 
-		TypeSet{ model.State }.Get<Chunkin>().chunkalicious;
-		model.Merge(tuple(Chunkin{ 1.0 }));
+		TypeSet{ model.State }.get<Chunkin>().chunkalicious;
+		model.merge(tuple(Chunkin{ 1.0 }));
 		const auto state = model.State;
-		model.Listen<Chunkin, Lumpy>(
+		model.listen<Chunkin, Lumpy>(
 			[](decltype(initialState)& components) {
-				const auto what = TypeSet{ components }.Get<Chunkin>().chunkalicious;
+				const auto what = TypeSet{ components }.get<Chunkin>().chunkalicious;
 				what;
 			});
 
 		cout << "Done!" << endl;
-	}
+	}	
 }

@@ -60,7 +60,7 @@ class TypeSet
 private:
 
 	template<typename Component>
-	tuple<T...> Set(Component component)
+	tuple<T...> set(Component component)
 	{
 		constexpr std::size_t index =
 			TypeSetUtils::tuple_element_index_v<Component, std::tuple<T...>>;
@@ -69,12 +69,12 @@ private:
 	}
 
 	template<typename... Component>
-	tuple<T...> SetMany(tuple<Component...> toSet)
+	tuple<T...> set_many(tuple<Component...> toSet)
 	{
 		return std::apply([this](auto... component)
 			{
 				std::tuple<T...> result = components;
-				((result = TypeSet{ result }.Set<Component>(component)), ...);
+				((result = TypeSet{ result }.set<Component>(component)), ...);
 				return result;
 			}, toSet);
 	}
@@ -82,37 +82,37 @@ private:
 public:
 	tuple<T...> components;
 
-	explicit TypeSet(T... args) : components{ std::make_tuple(args...) } {}
+	explicit TypeSet(T... args) : components{ std::tuple(args...) } {}
 	explicit TypeSet(std::tuple<T...> arg) : components{ arg } {}
 
 	template<typename... Component>
-	auto Merge(tuple<Component...> toMerge)
+	auto merge(tuple<Component...> toMerge)
 	{
 		return std::apply([this](auto... component) {
 				auto toSet =
 					std::tuple_cat(
 						std::get<TypeSetUtils::InTuple<Component, decltype(components)> ? 0 : 1>(
-							std::make_tuple(
-								std::make_tuple(component),
-								std::make_tuple()))...);
+							std::tuple(
+								std::tuple(component),
+								std::tuple()))...);
 				return std::tuple_cat(
-					SetMany(toSet),
+					set_many(toSet),
 					std::tuple_cat(
 						std::get<TypeSetUtils::OutOfTuple<Component, decltype(components)> ? 0 : 1>(
-							std::make_tuple(
-								std::make_tuple(component),
-								std::make_tuple()))...));
+							std::tuple(
+								std::tuple(component),
+								std::tuple()))...));
 			}, toMerge);
 	}
 
 	template<typename... Component>
-	auto Merge(Component... toMerge)
+	auto merge(Component... toMerge)
 	{
-		return Merge(make_tuple(toMerge...));
+		return merge(make_tuple(toMerge...));
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>> Component>
-	Component Get()
+	Component get()
 	{
 		constexpr std::size_t index =
 			TypeSetUtils::tuple_element_index_v<Component, std::tuple<T...>>;
@@ -120,15 +120,15 @@ public:
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>>... Component>
-	std::tuple<Component...> Pick()
+	std::tuple<Component...> pick()
 	{
-		return std::make_tuple(Get<Component>()...);
+		return std::make_tuple(get<Component>()...);
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>>... Components>
 	operator tuple<Components...>()
 	{
-		return Pick<Components...>();
+		return pick<Components...>();
 	}
 };
 
@@ -173,20 +173,20 @@ namespace TypeSetTester
 		{
 			Physics{ {0, 0}, {10, 10} },
 			Health{ 100, 100 }
-		}.Merge(components3);
-		auto physics = TypeSet{ components }.Get<Physics>();
+		}.merge(components3);
+		auto physics = TypeSet{ components }.get<Physics>();
 		physics.velocity = { 32, 32 };
-		components = TypeSet{ components }.Merge(physics);
+		components = TypeSet{ components }.merge(physics);
 
 		const auto x = GetHealthCurrent(TypeSet{ components });
 		const auto y = GetPositionX(TypeSet{ components });
 		std::cout << x << std::endl;
 		{
-			auto [physics, health] = TypeSet{ components }.Pick<Physics, Health>();
+			auto [physics, health] = TypeSet{ components }.pick<Physics, Health>();
 			health.current -= 10;
-			auto result2 = TypeSet{ components }.Merge(Glutes{ 20 }, health);
-			auto result4 = TypeSet{ result2 }.Merge(Glutes{ 30 }, 2, 3.14);
-			auto [physics2, health2, glutes2] = TypeSet{ result4 }.Pick<Physics, Health, Glutes>();
+			auto result2 = TypeSet{ components }.merge(Glutes{ 20 }, health);
+			auto result4 = TypeSet{ result2 }.merge(Glutes{ 30 }, 2, 3.14);
+			auto [physics2, health2, glutes2] = TypeSet{ result4 }.pick<Physics, Health, Glutes>();
 
 			std::cout << physics2.position.x << std::endl;
 			std::cout << physics2.velocity.x << std::endl;
