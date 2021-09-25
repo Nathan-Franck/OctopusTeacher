@@ -3,12 +3,12 @@
 
 template<class... Responder>
 class MadnessModel {
-public:
-	MadnessModel(Responder... responder) {}
-
 	using Inputs = decltype((TypeSet{ declval<Responder>().input } + ...));
 	using Outputs = decltype((TypeSet{ declval<Responder>().output } + ...));
+public:
 	using State = decltype(TypeSet{ declval<Inputs>() } + TypeSet{ declval<Outputs>() });
+	State state;
+	MadnessModel(Responder... responders) {};
 };
 
 template<class Input, class Output>
@@ -31,22 +31,20 @@ struct Hum {
 
 };
 
-using Thing = decltype(MadnessModel(
-	Responder<tuple<Hum, double>, tuple<Hi>>(
-		[](auto input) {
-			return tuple(Hi{ 0 });
-		}),
-	Responder<tuple<int, double>, tuple<Ho, double>>(
-		[](auto input) {
-			return tuple(Ho{}, 0.0);
-		})
-			))::State;
-
 namespace MadnessModelTester {
 
 
 	void Test() {
-		Thing thing = tuple(0.0f, 0, 0.0);
+		auto model = MadnessModel(
+			Responder<tuple<Hum, double>, tuple<Hi>>(
+				[](auto input) {
+					return tuple(Hi{ 0 });
+				}),
+			Responder<tuple<int, double>, tuple<Ho, double>>(
+				[](auto input) {
+					return tuple(Ho{}, 0.0);
+				})
+			).state;
 		cout << "hi" << endl;
 	}
 }
