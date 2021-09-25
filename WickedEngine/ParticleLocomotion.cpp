@@ -6,6 +6,13 @@ using namespace wiScene;
 
 const XMFLOAT3 ParticleLocomotion::MoveTowards(XMVECTOR intendedDirection)
 {
+
+	wiRenderer::RenderableLine line;
+	XMStoreFloat3(&line.start, position);
+	XMStoreFloat3(&line.end, position + intendedDirection);
+	line.color_start = line.color_end = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	wiRenderer::DrawSphere({ {0, 0, 0}, 0.1f });
+
 	XMVECTOR direction = intendedDirection;
 	float directionLength = XMVectorGetX(XMVector3Length(intendedDirection));
 	XMFLOAT3 result;
@@ -19,6 +26,12 @@ const XMFLOAT3 ParticleLocomotion::MoveTowards(XMVECTOR intendedDirection)
 				RAY(position, direction),
 				RENDERTYPE_OPAQUE,
 				1U << 0);
+
+			wiRenderer::RenderableLine line;
+			XMStoreFloat3(&line.start, position);
+			XMStoreFloat3(&line.end, position + direction * fmin(bonkResult.distance, directionLength + radius) / directionLength);
+			wiRenderer::DrawLine(line);
+
 			if (bonkResult.distance > directionLength + radius)
 			{
 				XMStoreFloat3(&result, position + direction);

@@ -8,6 +8,7 @@
     <ClInclude Include="ParticleLocomotion.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="TypeSet.h" />
+    <ClInclude Include="Model.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />
