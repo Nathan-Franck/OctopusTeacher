@@ -112,7 +112,7 @@ public:
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>> Component>
-	Component get()
+	const Component get()
 	{
 		constexpr std::size_t index =
 			TypeSetUtils::tuple_element_index_v<Component, std::tuple<T...>>;
@@ -120,13 +120,13 @@ public:
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>>... Component>
-	std::tuple<Component...> pick()
+	const std::tuple<Component...> pick()
 	{
 		return std::make_tuple(get<Component>()...);
 	}
 
 	template<TypeSetUtils::InTuple<tuple<T...>>... Components>
-	operator tuple<Components...>()
+	operator tuple<Components...> const ()
 	{
 		return pick<Components...>();
 	}
