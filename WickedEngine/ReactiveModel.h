@@ -20,7 +20,7 @@ struct TupleHelper <tuple<Member...>>
 };
  
 template<class... Responder>
-class MadnessModel {
+class ReactiveModel {
 	using Inputs = decltype((TypeSet{ declval<InspectLambda<Responder>::Input>() } + ...));
 	using Outputs = decltype((TypeSet{ declval< InspectLambda<Responder>::Output>() } + ...));
 	using State = decltype(TypeSet{ declval<Inputs>() } + TypeSet{ declval<Outputs>() });
@@ -45,7 +45,7 @@ class MadnessModel {
 					[this, unhandled_change](Responder... responder) {
 						return ((TupleHelper<InspectLambda<Responder>::Input>().hasIndex(unhandled_change) && submit(responder(TypeSet{ _state }))), ...);
 					}, responders);
-			});
+				});
 
 			unordered_set<void*> callbacks;
 			while (existing_unhandled_changes.size() > 0)
@@ -72,7 +72,7 @@ public:
 	using ViewState = State;
 
 	tuple<Responder...> responders;
-	MadnessModel(Responder... responders) : responders{ tuple(responders...) } {};
+	ReactiveModel(Responder... responders) : responders{ tuple(responders...) } {};
 	template <TypeSetUtils::InTuple<State>... Member>
 	void listen(Callback callback)
 	{
@@ -115,11 +115,11 @@ struct LayerA3 {
 	float value;
 };
 
-namespace MadnessModelTester {
+namespace ReactiveModelTester {
 
 
 	void Test() {
-		auto model = MadnessModel(
+		auto model = ReactiveModel(
 			[](tuple<LayerA1> input) {
 				auto [layerA1] = input;
 				return tuple(LayerA2{ layerA1.value / 1234.0f });

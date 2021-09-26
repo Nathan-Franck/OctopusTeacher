@@ -1,8 +1,7 @@
 
 #include "Game.h"
 #include "TypeSet.h"
-#include <Model.h>
-#include <MadnessModel.h>
+#include <ReactiveModel.h>
 
 void Game::Update(float dt)
 {
@@ -25,6 +24,5 @@ void Game::Update(float dt)
 	transform->UpdateTransform_Parented(*parentTransform);
 
 	TypeSetTester::Test();
-	ModelTester::Test();
-	MadnessModelTester::Test();
+	ReactiveModelTester::Test();
 }
