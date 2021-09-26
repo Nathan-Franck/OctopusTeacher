@@ -40,7 +40,6 @@ class MadnessModel {
 			auto existing_unhandled_changes = unordered_set(unhandled_changes);
 			unhandled_changes.clear();
 
-
 			for_each(existing_unhandled_changes.begin(), existing_unhandled_changes.end(), [this](type_index unhandled_change) {
 				apply(
 					[this, unhandled_change](Responder... responder) {
@@ -91,26 +90,29 @@ public:
 		}
 		return true;
 	}
+	State state() {
+		return _state;
+	}
 };
 
 struct LayerA1 {
-	int value;
+	float value;
 };
 
 struct LayerB1 {
-	int value;
+	float value;
 };
 
 struct LayerA2 {
-	int value;
+	float value;
 };
 
 struct LayerB2 {
-	int value;
+	float value;
 };
 
 struct LayerA3 {
-	int value;
+	float value;
 };
 
 namespace MadnessModelTester {
@@ -119,17 +121,25 @@ namespace MadnessModelTester {
 	void Test() {
 		auto model = MadnessModel(
 			[](tuple<LayerA1> input) {
-				return tuple(LayerA2{ 12 });
+				auto [layerA1] = input;
+				return tuple(LayerA2{ layerA1.value / 1234.0f });
 			},
 			[](tuple<LayerA2> input) {
-				return tuple(LayerA3{ 13 });
+				auto [layerA2] = input;
+				return tuple(LayerA3{ layerA2.value / 2345.0f });
 			},
 			[](tuple<LayerB1> input) {
-				return tuple(LayerB2{ 22 });
+				auto [layerB1] = input;
+				return tuple(LayerB2{ layerB1.value / 3456.0f });
 			}
 		);
 		decltype(model)::ViewState;
-		model.submit(tuple(LayerA1{ 11 }, LayerB1{ 21 }));
-		cout << "hi" << endl;
+		srand(time(NULL));
+		model.submit(tuple(LayerA1{ rand() % 1000 / 1000.0f }, LayerB1{ rand() % 1000 / 1000.0f }));
+
+		auto printValue = [](auto... args) {
+			cout << (args.value + ...) << endl;
+		};
+		apply(printValue, model.state());
 	}
 }
