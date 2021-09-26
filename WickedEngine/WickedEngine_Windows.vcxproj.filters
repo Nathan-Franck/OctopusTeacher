@@ -9,7 +9,7 @@
     <ClInclude Include="utils.h" />
     <ClInclude Include="TypeSet.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="MadnessModel.h" />
+    <ClInclude Include="ReactiveModel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />

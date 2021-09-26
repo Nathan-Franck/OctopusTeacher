@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MadnessModel.h" />
+    <ClInclude Include="ReactiveModel.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="TypeSet.h" />
     <ClInclude Include="stdafx.h" />

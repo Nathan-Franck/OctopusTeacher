@@ -83,7 +83,7 @@ public:
 	tuple<T...> components;
 
 	explicit TypeSet(T... args) : components{ std::tuple(args...) } {}
-	explicit TypeSet(std::tuple<T...> arg) : components{ arg } {}
+	explicit TypeSet(const std::tuple<T...>& arg) : components{ arg } {}
 
 	template<typename... Component>
 	auto merge(tuple<Component...> toMerge)

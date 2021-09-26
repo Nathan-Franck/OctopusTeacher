@@ -1,83 +1,94 @@
 #pragma once
 #include <type_traits>
 
-template <typename T> struct InspectLambda : InspectLambda<decltype(&T::operator())> {};
-template <typename Out, typename C, typename In>
-struct InspectLambda<Out(C::*)(In) const>
+template<class... Reactors>
+class ReactiveModel
 {
-	using Input = In;
-	using Output = Out;
-};
-
-template <typename T> struct TupleHelper : InspectLambda<T> {};
-template <typename... Member>
-struct TupleHelper <tuple<Member...>>
-{
-	bool hasIndex(type_index index)
+	// Helper structs
+	template <typename T> struct InspectLambda : InspectLambda<decltype(&T::operator())> {};
+	template <typename Out, typename C, typename In>
+	struct InspectLambda<Out(C::*)(In) const>
 	{
-		return ((typeid(Member) == index) || ...);
-	}
-};
- 
-template<class... Responder>
-class ReactiveModel {
-	using Inputs = decltype((TypeSet{ declval<InspectLambda<Responder>::Input>() } + ...));
-	using Outputs = decltype((TypeSet{ declval< InspectLambda<Responder>::Output>() } + ...));
-	using State = decltype(TypeSet{ declval<Inputs>() } + TypeSet{ declval<Outputs>() });
+		using Input = In;
+		using Output = Out;
+	};
+	template <typename T> struct TupleHelper : InspectLambda<T> {};
+	template <typename... Member>
+	struct TupleHelper <tuple<Member...>>
+	{
+		bool hasIndex(type_index index)
+		{
+			return ((typeid(Member) == index) || ...);
+		}
+	};
 
-	typedef void(*Callback)(State&);
-	State _state;
+	// Derivative types
+	using _State = decltype((TypeSet{
+		TypeSet{
+			declval<InspectLambda<Reactors>::Input>()
+		}.merge(
+			declval<InspectLambda<Reactors>::Output>()
+		) } + ...));
+	typedef void(*Callback)(const _State&);
+
+	// State
+	_State _state;
+	tuple<Reactors...> reactors;
 	unordered_map<std::type_index, vector<void*>> listeners;
 	unordered_set<std::type_index> unhandled_changes;
 	std::mutex change_handling_mutex;
 
-	static const int INFINITE_LOOP_LIMIT = 5;
-
+	// Reactiveness implentation
 	void change_handler()
 	{
+		static const int INFINITE_LOOP_LIMIT = 5;
 		for (int i = 0; unhandled_changes.size() > 0 && i < INFINITE_LOOP_LIMIT; i++)
 		{
-			auto existing_unhandled_changes = unordered_set(unhandled_changes);
+			auto changed_indices = unordered_set(unhandled_changes);
 			unhandled_changes.clear();
 
-			for_each(existing_unhandled_changes.begin(), existing_unhandled_changes.end(), [this](type_index unhandled_change) {
-				apply(
-					[this, unhandled_change](Responder... responder) {
-						return ((TupleHelper<InspectLambda<Responder>::Input>().hasIndex(unhandled_change) && submit(responder(TypeSet{ _state }))), ...);
-					}, responders);
+			// Reactors
+			for_each(
+				changed_indices.begin(), changed_indices.end(),
+				[this](type_index changed_index) {
+					apply(
+						[this, changed_index](Reactors... reactor) {
+							return ((
+								TupleHelper<InspectLambda<Reactors>::Input>().hasIndex(changed_index)
+								&& submit(reactor(TypeSet{ _state }))
+								), ...);
+						}, reactors);
 				});
 
-			unordered_set<void*> callbacks;
-			while (existing_unhandled_changes.size() > 0)
-			{
-				const auto it = --existing_unhandled_changes.end();
-				const auto element = *it;
-				const auto listeners = this->listeners[element];
-
-				for_each(listeners.begin(), listeners.end(), [&callbacks](auto listener) { callbacks.insert(listener); });
-
-				existing_unhandled_changes.erase(it);
-			}
-
+			// Listeners
 			for_each(
-				callbacks.begin(), callbacks.end(),
-				[this](void* callback) {
-					Callback callable = (Callback)callback;
-					callable(_state);
+				changed_indices.begin(), changed_indices.end(),
+				[this](type_index changed_index) {
+					const auto listeners = this->listeners[changed_index];
+					for_each(
+						listeners.begin(), listeners.end(),
+						[this](auto listener) {
+							Callback callback = (Callback)listener;
+							callback(_state);
+						});
 				});
 		}
 	}
 
 public:
-	using ViewState = State;
+	using State = _State;
 
-	tuple<Responder...> responders;
-	ReactiveModel(Responder... responders) : responders{ tuple(responders...) } {};
+	// Provide a series of reactive callbacks, one reactive function may trigger another reactive function, while aggregating new state data
+	ReactiveModel(Reactors... reactors) : reactors{ tuple(reactors...) } {};
+
+	// Add new side-effect callback that listens to type(s) in model
 	template <TypeSetUtils::InTuple<State>... Member>
 	void listen(Callback callback)
 	{
 		(listeners[typeid(Member)].push_back((void*)callback), ...);
 	}
+
+	// Add data to model state, triggers reactive events internally
 	template <TypeSetUtils::InTuple<State>... Member>
 	bool submit(tuple<Member...> partialState)
 	{
@@ -90,7 +101,9 @@ public:
 		}
 		return true;
 	}
-	State state() {
+
+	State state()
+	{
 		return _state;
 	}
 };
@@ -133,7 +146,7 @@ namespace ReactiveModelTester {
 				return tuple(LayerB2{ layerB1.value / 3456.0f });
 			}
 		);
-		decltype(model)::ViewState;
+		decltype(model)::State;
 		srand(time(NULL));
 		model.submit(tuple(LayerA1{ rand() % 1000 / 1000.0f }, LayerB1{ rand() % 1000 / 1000.0f }));
 
