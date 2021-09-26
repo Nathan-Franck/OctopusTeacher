@@ -55,6 +55,7 @@ class ReactiveModel
 				[this](type_index changed_index) {
 					apply([this, changed_index](Reactors... reactor) {((
 						TupleHelper<InspectLambda<Reactors>::Input>().hasIndex(changed_index)
+						&& !TupleHelper<InspectLambda<Reactors>::Output>().hasIndex(changed_index)
 						&& submit(reactor(TypeSet{ _state }))), ...); }, reactors); });
 
 			// Listeners
@@ -132,7 +133,7 @@ namespace ReactiveModelTester
 			},
 			[](tuple<Cell<A, 2>> input) {
 				auto [cell] = input;
-				return tuple(Cell<A, 3>{ cell.value / 2345.0f });
+				return tuple(Cell<A, 2>{ 0 }, Cell<A, 3>{ cell.value / 2345.0f });
 			},
 			[](tuple<Cell<B, 1>> input) {
 				auto [cell] = input;
