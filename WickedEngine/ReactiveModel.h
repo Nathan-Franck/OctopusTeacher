@@ -53,14 +53,9 @@ class ReactiveModel
 			for_each(
 				changed_indices.begin(), changed_indices.end(),
 				[this](type_index changed_index) {
-					apply(
-						[this, changed_index](Reactors... reactor) {
-							return ((
-								TupleHelper<InspectLambda<Reactors>::Input>().hasIndex(changed_index)
-								&& submit(reactor(TypeSet{ _state }))
-								), ...);
-						}, reactors);
-				});
+					apply([this, changed_index](Reactors... reactor) {((
+						TupleHelper<InspectLambda<Reactors>::Input>().hasIndex(changed_index)
+						&& submit(reactor(TypeSet{ _state }))), ...); }, reactors); });
 
 			// Listeners
 			for_each(
@@ -71,9 +66,7 @@ class ReactiveModel
 						listeners.begin(), listeners.end(),
 						[this](auto listener) {
 							Callback callback = (Callback)listener;
-							callback(_state);
-						});
-				});
+							callback(_state); }); });
 		}
 	}
 
