@@ -42,8 +42,10 @@ class ReactiveModel
 	void change_handler()
 	{
 		static const int INFINITE_LOOP_LIMIT = 5;
-		for (int i = 0; unhandled_changes.size() > 0 && i < INFINITE_LOOP_LIMIT; i++)
+		for (int i = 0; unhandled_changes.size() > 0; i++)
 		{
+			assert(i < INFINITE_LOOP_LIMIT);
+
 			auto changed_indices = unordered_set(unhandled_changes);
 			unhandled_changes.clear();
 
