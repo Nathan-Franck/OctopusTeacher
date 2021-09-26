@@ -108,47 +108,51 @@ public:
 	}
 };
 
-struct LayerA1 {
-	float value;
-};
+namespace ReactiveModelTester
+{
+	enum
+	{
+		A,
+		B,
+		C,
+		D,
+		E,
+		F,
+	};
+	template<int Row, int Column>
+	struct Cell
+	{
+		float value;
+	};
 
-struct LayerB1 {
-	float value;
-};
-
-struct LayerA2 {
-	float value;
-};
-
-struct LayerB2 {
-	float value;
-};
-
-struct LayerA3 {
-	float value;
-};
-
-namespace ReactiveModelTester {
-
-
-	void Test() {
-		auto model = ReactiveModel(
-			[](tuple<LayerA1> input) {
-				auto [layerA1] = input;
-				return tuple(LayerA2{ layerA1.value / 1234.0f });
-			},
-			[](tuple<LayerA2> input) {
-				auto [layerA2] = input;
-				return tuple(LayerA3{ layerA2.value / 2345.0f });
-			},
-			[](tuple<LayerB1> input) {
-				auto [layerB1] = input;
-				return tuple(LayerB2{ layerB1.value / 3456.0f });
-			}
-		);
-		decltype(model)::State;
+	void Test()
+	{
 		srand(time(NULL));
-		model.submit(tuple(LayerA1{ rand() % 1000 / 1000.0f }, LayerB1{ rand() % 1000 / 1000.0f }));
+
+		// Internal model reactive calculations
+		auto model = ReactiveModel(
+			[](tuple<Cell<A, 1>> input) {
+				auto [cell] = input;
+				return tuple(Cell<A, 2>{ cell.value / 1234.0f });
+			},
+			[](tuple<Cell<A, 2>> input) {
+				auto [cell] = input;
+				return tuple(Cell<A, 3>{ cell.value / 2345.0f });
+			},
+			[](tuple<Cell<B, 1>> input) {
+				auto [cell] = input;
+				return tuple(Cell<B, 2>{ cell.value / 3456.0f });
+			});
+		// Side-effects
+		model.listen<Cell<A, 3>>(
+			[](auto state) {
+				auto [cell] = TypeSet{ state }.pick<Cell<A, 3>>();
+				cout << cell.value << endl;
+			});
+		// Input
+		model.submit(tuple(Cell<A, 1>{ rand() % 1000 / 1000.0f }, Cell<B, 1>{ rand() % 1000 / 1000.0f }));
+		// Debug
+		decltype(model)::State;
 
 		auto printValue = [](auto... args) {
 			cout << (args.value + ...) << endl;
